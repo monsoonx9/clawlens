@@ -1,0 +1,18 @@
+{
+    "name": "ClawLens — Council AI",
+    "short_name": "ClawLens",
+    "description": "Don't ask one AI. Ask the Council. Multi-agent crypto analysis powered by AI.",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#00ff23",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/logo_v1.webp",
+            "sizes": "512x512",
+            "type": "image/webp",
+            "purpose": "any maskable"
+        }
+    ]
+}

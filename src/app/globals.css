@@ -1,0 +1,634 @@
+/* stylelint-disable at-rule-no-unknown */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --mouse-active: 0;
+  --glow-opacity: 0;
+
+  /* LIGHT THEME VARIABLES */
+  --color-bg: #fdfdfd;
+  --color-bg-soft: #f8fafc;
+  --color-card: #ffffff;
+  --color-card-hover: #ffffff;
+  --color-card-border: color-mix(in srgb, var(--color-black-fixed), transparent 94%);
+  --color-card-border-hover: color-mix(in srgb, var(--color-black-fixed), transparent 88%);
+  --color-glass: color-mix(in srgb, var(--color-white-fixed), transparent 40%);
+  --color-glass-strong: color-mix(in srgb, var(--color-white-fixed), transparent 15%);
+  --color-text: #020617;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-text-dim: #94a3b8;
+  --color-text-primary: var(--color-text);
+  --color-amoled: var(--color-bg);
+  --color-white-fixed: #ffffff;
+  --color-black-fixed: #000000;
+  --color-dot: color-mix(in srgb, var(--color-black-fixed), transparent 92%);
+
+  /* Risk Colors */
+  --color-risk-low: #16a34a;
+  --color-risk-moderate: #d97706;
+  --color-risk-high: #ea580c;
+  --color-risk-extreme: #dc2626;
+
+  /* Primary Accent - Green (Light Mode) */
+  --color-accent: #16a34a;
+  --color-accent-dim: #15803d;
+  --color-accent-bg: color-mix(in srgb, var(--color-accent), transparent 90%);
+
+  /* Secondary Accent - Gray (Light Mode) */
+  --color-accent-secondary: #475569;
+  --color-accent-secondary-dim: #334155;
+  --color-accent-secondary-bg: color-mix(in srgb, var(--color-accent-secondary), transparent 90%);
+
+  /* Hover Glows (Light Mode) */
+  --color-glow: color-mix(in srgb, var(--color-black-fixed), transparent 88%);
+  --color-glow-accent: color-mix(in srgb, var(--color-accent), transparent 75%);
+  --color-glow-accent-secondary: color-mix(in srgb, var(--color-accent-secondary), transparent 75%);
+
+  /* Agent Colors (Light) */
+  --color-agent-scout: #10b981;
+  --color-agent-scout-bg: color-mix(in srgb, var(--color-agent-scout), transparent 90%);
+  --color-agent-scout-border: color-mix(in srgb, var(--color-agent-scout), transparent 80%);
+
+  --color-agent-warden: #dc2626;
+  --color-agent-warden-bg: color-mix(in srgb, var(--color-agent-warden), transparent 90%);
+  --color-agent-warden-border: color-mix(in srgb, var(--color-agent-warden), transparent 80%);
+
+  --color-agent-lens: #2563eb;
+  --color-agent-lens-bg: color-mix(in srgb, var(--color-agent-lens), transparent 90%);
+  --color-agent-lens-border: color-mix(in srgb, var(--color-agent-lens), transparent 80%);
+
+  --color-agent-shadow: #7c3aed;
+  --color-agent-shadow-bg: color-mix(in srgb, var(--color-agent-shadow), transparent 90%);
+  --color-agent-shadow-border: color-mix(in srgb, var(--color-agent-shadow), transparent 80%);
+
+  --color-agent-ledger: #0891b2;
+  --color-agent-ledger-bg: color-mix(in srgb, var(--color-agent-ledger), transparent 90%);
+  --color-agent-ledger-border: color-mix(in srgb, var(--color-agent-ledger), transparent 80%);
+
+  --color-agent-pulse: #db2777;
+  --color-agent-pulse-bg: color-mix(in srgb, var(--color-agent-pulse), transparent 90%);
+  --color-agent-pulse-border: color-mix(in srgb, var(--color-agent-pulse), transparent 80%);
+
+  --color-agent-sage: #65a30d;
+  --color-agent-sage-bg: color-mix(in srgb, var(--color-agent-sage), transparent 90%);
+  --color-agent-sage-border: color-mix(in srgb, var(--color-agent-sage), transparent 80%);
+
+  --color-agent-quill: #ea580c;
+  --color-agent-quill-bg: color-mix(in srgb, var(--color-agent-quill), transparent 90%);
+  --color-agent-quill-border: color-mix(in srgb, var(--color-agent-quill), transparent 80%);
+
+  --color-agent-arbiter: #d97706;
+  --color-agent-arbiter-bg: color-mix(in srgb, var(--color-agent-arbiter), transparent 90%);
+  --color-agent-arbiter-border: color-mix(in srgb, var(--color-agent-arbiter), transparent 80%);
+
+  /* NEW Agents */
+  --color-agent-futures: #f59e0b;
+  --color-agent-futures-bg: color-mix(in srgb, var(--color-agent-futures), transparent 90%);
+  --color-agent-futures-border: color-mix(in srgb, var(--color-agent-futures), transparent 80%);
+
+  --color-agent-blaze: #ef4444;
+  --color-agent-blaze-bg: color-mix(in srgb, var(--color-agent-blaze), transparent 90%);
+  --color-agent-blaze-border: color-mix(in srgb, var(--color-agent-blaze), transparent 80%);
+
+  /* Chain Colors (Light) */
+  --color-chain-bsc: #d97706;
+  --color-chain-eth: #2563eb;
+  --color-chain-sol: #7c3aed;
+  --color-chain-base: #2563eb;
+  --color-chain-polygon: #7c3aed;
+  --color-chain-arb: #2563eb;
+}
+
+.dark {
+  /* DARK THEME VARIABLES */
+  --color-bg: #000000;
+  --color-bg-soft: #0a0a0a;
+  --color-card: color-mix(in srgb, #0a0a0c, transparent 5%);
+  --color-card-hover: color-mix(in srgb, #0f0f12, transparent 2%);
+  --color-card-border: color-mix(in srgb, var(--color-white-fixed), transparent 90%);
+  --color-card-border-hover: color-mix(in srgb, var(--color-white-fixed), transparent 82%);
+  --color-glass: color-mix(in srgb, #0a0a0c, transparent 5%);
+  --color-glass-strong: color-mix(in srgb, #0a0a0c, transparent 2%);
+  --color-text: #f5f5f5;
+  --color-text-secondary: #c4c4c9;
+  --color-text-muted: #8b8b8f;
+  --color-text-dim: #52525b;
+  --color-text-primary: var(--color-text);
+  --color-amoled: var(--color-bg);
+  --color-white-fixed: #ffffff;
+  --color-black-fixed: #000000;
+  --color-dot: color-mix(in srgb, var(--color-white-fixed), transparent 97%);
+
+  /* Risk Colors (Dark) */
+  --color-risk-low: #22c55e;
+  --color-risk-moderate: #f59e0b;
+  --color-risk-high: #f97316;
+  --color-risk-extreme: #ef4444;
+
+  /* Primary Accent - Green (Dark Mode) */
+  --color-accent: #22c55e;
+  --color-accent-dim: #16a34a;
+  --color-accent-bg: color-mix(in srgb, var(--color-accent), transparent 85%);
+
+  /* Secondary Accent - Gray (Dark Mode) */
+  --color-accent-secondary: #8b8b8f;
+  --color-accent-secondary-dim: #52525b;
+  --color-accent-secondary-bg: color-mix(in srgb, var(--color-accent-secondary), transparent 85%);
+
+  /* Hover Glows (Dark Mode) */
+  --color-glow: color-mix(in srgb, var(--color-white-fixed), transparent 82%);
+  --color-glow-accent: color-mix(in srgb, var(--color-accent), transparent 70%);
+  --color-glow-accent-secondary: color-mix(in srgb, var(--color-accent-secondary), transparent 75%);
+  /* Agent Colors (Dark) */
+  --color-agent-scout: #10b981;
+  --color-agent-scout-bg: color-mix(in srgb, var(--color-agent-scout), transparent 85%);
+  --color-agent-scout-border: color-mix(in srgb, var(--color-agent-scout), transparent 70%);
+
+  --color-agent-warden: #ef4444;
+  --color-agent-warden-bg: color-mix(in srgb, var(--color-agent-warden), transparent 85%);
+  --color-agent-warden-border: color-mix(in srgb, var(--color-agent-warden), transparent 70%);
+
+  --color-agent-lens: #3b82f6;
+  --color-agent-lens-bg: color-mix(in srgb, var(--color-agent-lens), transparent 85%);
+  --color-agent-lens-border: color-mix(in srgb, var(--color-agent-lens), transparent 70%);
+
+  --color-agent-shadow: #8b5cf6;
+  --color-agent-shadow-bg: color-mix(in srgb, var(--color-agent-shadow), transparent 85%);
+  --color-agent-shadow-border: color-mix(in srgb, var(--color-agent-shadow), transparent 70%);
+
+  --color-agent-ledger: #06b6d4;
+  --color-agent-ledger-bg: color-mix(in srgb, var(--color-agent-ledger), transparent 85%);
+  --color-agent-ledger-border: color-mix(in srgb, var(--color-agent-ledger), transparent 70%);
+
+  --color-agent-pulse: #ec4899;
+  --color-agent-pulse-bg: color-mix(in srgb, var(--color-agent-pulse), transparent 85%);
+  --color-agent-pulse-border: color-mix(in srgb, var(--color-agent-pulse), transparent 70%);
+
+  --color-agent-sage: #84cc16;
+  --color-agent-sage-bg: color-mix(in srgb, var(--color-agent-sage), transparent 85%);
+  --color-agent-sage-border: color-mix(in srgb, var(--color-agent-sage), transparent 70%);
+
+  --color-agent-quill: #f97316;
+  --color-agent-quill-bg: color-mix(in srgb, var(--color-agent-quill), transparent 85%);
+  --color-agent-quill-border: color-mix(in srgb, var(--color-agent-quill), transparent 70%);
+
+  --color-agent-arbiter: #f59e0b;
+  --color-agent-arbiter-bg: color-mix(in srgb, var(--color-agent-arbiter), transparent 85%);
+  --color-agent-arbiter-border: color-mix(in srgb, var(--color-agent-arbiter), transparent 70%);
+
+  --color-agent-futures: #f59e0b;
+  --color-agent-futures-bg: color-mix(in srgb, var(--color-agent-futures), transparent 85%);
+  --color-agent-futures-border: color-mix(in srgb, var(--color-agent-futures), transparent 70%);
+
+  --color-agent-blaze: #ef4444;
+  --color-agent-blaze-bg: color-mix(in srgb, var(--color-agent-blaze), transparent 85%);
+  --color-agent-blaze-border: color-mix(in srgb, var(--color-agent-blaze), transparent 70%);
+
+  /* Chain Colors (Dark) */
+  --color-chain-bsc: #f59e0b;
+  --color-chain-eth: #3b82f6;
+  --color-chain-sol: #8b5cf6;
+  --color-chain-base: #3b82f6;
+  --color-chain-polygon: #8b5cf6;
+  --color-chain-arb: #3b82f6;
+}
+
+html {
+  background-color: var(--color-bg);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.bg-dot-pattern {
+  position: relative;
+  z-index: 0;
+  background-color: var(--color-bg);
+  background-image:
+    /* Mouse reactive zoom glow - Using Site Accent Color - More Subtle */
+    radial-gradient(
+      circle calc(200px + var(--mouse-active, 0) * 100px) at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      color-mix(in srgb, var(--color-accent), transparent 96%) 0%,
+      transparent 80%
+    ),
+    /* Subtle grid overlay - Using Site Dot Color */
+    linear-gradient(var(--color-dot) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-dot) 1px, transparent 1px),
+    /* Floating gradient blobs - Synced with site accents - More Subtle */
+    radial-gradient(
+        circle at 15% 25%,
+        color-mix(in srgb, var(--color-accent), transparent 97%) 0%,
+        transparent 40%
+      ),
+    radial-gradient(
+      circle at 85% 15%,
+      color-mix(in srgb, var(--color-accent-secondary), transparent 98%) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 50% 85%,
+      color-mix(in srgb, var(--color-accent), transparent 99%) 0%,
+      transparent 45%
+    );
+  background-size:
+    100% 100%,
+    50px 50px,
+    50px 50px,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+  transition: background-image 0.4s ease;
+}
+
+.dark .bg-dot-pattern {
+  background-color: var(--color-bg);
+  background-image:
+    /* Subtle grid overlay */
+    linear-gradient(var(--color-dot) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-dot) 1px, transparent 1px),
+    /* Floating gradient blobs - Synced with site accents - Dark Mode Subtle */
+    radial-gradient(
+        circle at 15% 25%,
+        color-mix(in srgb, var(--color-accent), transparent 95%) 0%,
+        transparent 40%
+      ),
+    radial-gradient(
+      circle at 85% 15%,
+      color-mix(in srgb, var(--color-accent-secondary), transparent 98%) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 50% 85%,
+      color-mix(in srgb, var(--color-agent-shadow), transparent 99%) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      color-mix(in srgb, var(--color-accent), transparent 99%) 0%,
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 25% 65%,
+      color-mix(in srgb, var(--color-accent-secondary), transparent 99%) 0%,
+      transparent 35%
+    );
+  background-size:
+    50px 50px,
+    50px 50px,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%;
+}
+
+.bg-dot-pattern::before {
+  content: "";
+  position: fixed;
+  width: 350px;
+  height: 350px;
+  left: var(--mouse-x, 50%);
+  top: var(--mouse-y, 50%);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent), transparent 92%) 0%,
+    color-mix(in srgb, var(--color-accent-secondary), transparent 96%) 30%,
+    transparent 80%
+  );
+
+  opacity: var(--mouse-active, 0);
+  pointer-events: none;
+  z-index: -1;
+  animation: mouse-glow-pulse 3s ease-in-out infinite;
+  transition: opacity 0.4s ease;
+}
+
+.dark .bg-dot-pattern::before {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent), transparent 94%) 0%,
+    color-mix(in srgb, var(--color-accent-secondary), transparent 98%) 30%,
+    transparent 80%
+  );
+}
+
+@keyframes mouse-glow-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: var(--mouse-active, 0);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: calc(var(--mouse-active, 0) * 1.2);
+  }
+}
+
+@keyframes breathe-neon {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1) translate(-50%, -50%);
+    filter: blur(12px);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2) translate(-42%, -42%);
+    filter: blur(16px);
+  }
+}
+
+/* Ensure content sits above the background */
+.bg-dot-pattern > * {
+  position: relative;
+  z-index: 1;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-card-border);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-card-border-hover);
+}
+
+/* Safe area for devices with notch/home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile edge-bleed scrollers */
+.mobile-edge-scroll {
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-edge-scroll {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Touch target minimum */
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Standard spacing utilities */
+  .page-section {
+    @apply mb-6;
+  }
+
+  .page-section-lg {
+    @apply mb-8;
+  }
+
+  .card-padding {
+    @apply p-4 sm:p-5;
+  }
+
+  .grid-gap-sm {
+    @apply gap-4;
+  }
+
+  .grid-gap-md {
+    @apply gap-6;
+  }
+
+  .grid-gap-lg {
+    @apply gap-8;
+  }
+}
+
+/* ---- Component Transitions ---- */
+@layer components {
+  .card-hover {
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.4s ease-in-out,
+      border-color 0.4s ease-in-out;
+  }
+
+  .card-hover::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-text-primary), transparent 92%),
+      transparent
+    );
+    transition: left 0.6s ease-in-out;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-accent);
+    box-shadow:
+      0 12px 40px color-mix(in srgb, var(--color-bg), black 30%),
+      0 0 20px color-mix(in srgb, var(--color-accent), transparent 90%);
+  }
+
+  .card-hover:hover::before {
+    left: 100%;
+  }
+
+  .btn-press {
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .btn-press:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--color-bg), black 10%);
+  }
+
+  .dark .btn-press:hover {
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--color-bg), black 30%);
+  }
+
+  .btn-press:active {
+    transform: scale(0.95);
+  }
+}
+
+/* ---- Glassmorphism Utilities ---- */
+@layer components {
+  .glass {
+    background: var(--color-glass);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid var(--color-card-border);
+  }
+
+  .glass-strong {
+    background: var(--color-glass-strong);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--color-card-border);
+  }
+
+  .glass-card {
+    background: var(--color-glass);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid var(--color-card-border);
+    border-radius: 20px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass-card:hover {
+    border-color: color-mix(in srgb, var(--color-accent), transparent 80%);
+    box-shadow:
+      0 20px 60px color-mix(in srgb, var(--color-bg), black 10%),
+      0 0 30px color-mix(in srgb, var(--color-accent), transparent 92%),
+      inset 0 1px 0 color-mix(in srgb, white, transparent 50%);
+  }
+
+  .dark .glass-card:hover {
+    border-color: color-mix(in srgb, var(--color-text-primary), transparent 85%);
+    box-shadow:
+      0 20px 60px color-mix(in srgb, var(--color-bg), black 40%),
+      0 0 30px color-mix(in srgb, var(--color-accent), transparent 85%),
+      inset 0 1px 0 color-mix(in srgb, var(--color-text-primary), transparent 90%);
+  }
+
+  .glass-pill {
+    background: var(--color-glass);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid var(--color-card-border);
+    border-radius: 9999px;
+  }
+
+  .glass-input {
+    background: var(--color-glass);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--color-card-border);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    color: var(--color-text);
+  }
+
+  .glass-input:focus {
+    background: var(--color-glass-strong);
+    border-color: var(--color-accent);
+    box-shadow:
+      0 0 0 3px var(--color-accent-bg),
+      0 0 20px color-mix(in srgb, var(--color-accent), transparent 95%);
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-amoled {
+    color: var(--color-amoled);
+  }
+
+  .bg-amoled {
+    background-color: var(--color-amoled);
+  }
+
+  .border-amoled {
+    border-color: var(--color-amoled);
+  }
+
+  .text-white-fixed {
+    color: var(--color-white-fixed);
+  }
+
+  .bg-white-fixed {
+    background-color: var(--color-white-fixed);
+  }
+
+  .text-black-fixed {
+    color: var(--color-black-fixed);
+  }
+
+  .bg-black-fixed {
+    background-color: var(--color-black-fixed);
+  }
+
+  /* Logo Effects */
+  .logo-container {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-container:hover {
+    transform: scale(1.08);
+  }
+
+  .logo-glow {
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent), transparent 60%));
+    transition: filter 0.3s ease;
+  }
+
+  .logo-container:hover .logo-glow {
+    filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-accent), transparent 30%));
+  }
+}

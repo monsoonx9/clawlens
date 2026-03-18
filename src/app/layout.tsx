@@ -15,14 +15,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://clawlens.tech"),
+  metadataBase: new URL("https://clawlens-beta.vercel.app"),
   title: "ClawLens — Council AI",
   description: "Don't ask one AI. Ask the Council.",
   manifest: "/manifest.json",
   openGraph: {
     title: "ClawLens — Council AI",
     description: "Don't ask one AI. Ask the Council.",
-    url: "https://clawlens.tech",
+    url: "https://clawlens-beta.vercel.app",
     siteName: "ClawLens",
     images: [
       {

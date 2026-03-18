@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://clawlens.tech/sitemap.xml
+Sitemap: https://clawlens-beta.vercel.app/sitemap.xml

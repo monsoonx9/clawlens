@@ -18,7 +18,7 @@
 
 **ClawLens** is an intelligent, multi-agent crypto analysis platform that connects to your Binance account and deploys a "Council" of 11 specialized AI agents to analyze your portfolio and the market — plus a Personal AI Assistant and a Telegram bot for on-the-go access.
 
-[View Demo](https://clawlens.tech) · [Report Bug](https://github.com/monsoonx9/clawlens/issues) · [Request Feature](https://github.com/monsoonx9/clawlens/issues)
+[View Demo](https://clawlens-beta.vercel.app) · [Report Bug](https://github.com/monsoonx9/clawlens/issues) · [Request Feature](https://github.com/monsoonx9/clawlens/issues)
 
 </div>
 
@@ -288,7 +288,7 @@ vercel
 | `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase Project URL                                  |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase Publishable (Anon) Key                       |
 | `SUPABASE_SERVICE_ROLE_KEY`     | Yes      | Supabase Legacy Service Role Key (for backend ops)    |
-| `NEXT_PUBLIC_APP_URL`           | No       | Production URL (e.g., `https://clawlenss.vercel.app`) |
+| `NEXT_PUBLIC_APP_URL`           | No       | Production URL (e.g., `https://clawlens-beta.vercel.app`) |
 | `TELEGRAM_BOT_TOKEN`            | No       | Telegram Bot Token from @BotFather                    |
 | `TELEGRAM_WEBHOOK_SECRET`       | No       | Secret for Telegram webhook verification              |
 

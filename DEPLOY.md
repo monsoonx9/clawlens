@@ -20,7 +20,7 @@ ClawLens requires the following environment variables:
 | `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase Project URL                                  |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase Publishable (Anon) Key                       |
 | `SUPABASE_SERVICE_ROLE_KEY`     | Yes      | Supabase Legacy Service Role Key (for backend ops)    |
-| `NEXT_PUBLIC_APP_URL`           | No       | Production URL (e.g., `https://clawlenss.vercel.app`) |
+| `NEXT_PUBLIC_APP_URL`           | No       | Production URL (e.g., `https://clawlens-beta.vercel.app`) |
 | `TELEGRAM_BOT_TOKEN`            | No       | Telegram Bot Token from @BotFather                    |
 | `TELEGRAM_WEBHOOK_SECRET`       | No       | Secret for Telegram webhook verification              |
 
@@ -90,7 +90,7 @@ NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 After deployment, you can add a custom domain:
 
 1. Go to Project Settings → Domains
-2. Add `clawlens.tech`
+2. Add `clawlens-beta.vercel.app`
 3. Update your DNS records as instructed by Vercel
 
 ## Setting up the Telegram Webhook (Optional)

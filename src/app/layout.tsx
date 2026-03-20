@@ -4,6 +4,8 @@ import "./globals.css";
 import { ClientLayout } from "@/components/layout/ClientLayout";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -69,6 +71,8 @@ export default function RootLayout({
           <ErrorBoundary>
             <ClientLayout>{children}</ClientLayout>
           </ErrorBoundary>
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>

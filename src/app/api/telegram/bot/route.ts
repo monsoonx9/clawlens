@@ -5,6 +5,7 @@ import {
   getTelegramBot,
   storeTelegramBot,
   deleteTelegramBot,
+  generateLinkCode,
   TelegramBotConfig,
 } from "@/lib/keyVault";
 import {
@@ -14,6 +15,7 @@ import {
   deleteUserWebhook,
 } from "@/lib/telegram/webhook";
 import { UserTelegramClient } from "@/lib/telegram/userClient";
+import { getSupabaseAdmin } from "@/lib/supabaseClient";
 
 function getSessionId(request: NextRequest): string | null {
   return request.cookies.get("clawlens_session")?.value || request.headers.get("x-session-id");
@@ -40,7 +42,15 @@ export async function GET(request: NextRequest) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://your-domain.vercel.app";
-    const webhookUrl = getWebhookUrl(config.webhookSecret, appUrl);
+    const webhookUrl = getWebhookUrl(config.webhookSecret, appUrl, sessionId);
+
+    const supabase = getSupabaseAdmin();
+    const { data: connection } = await supabase
+      .from("telegram_connections")
+      .select("id, telegram_chat_id, is_active")
+      .eq("user_id", sessionId)
+      .eq("is_active", true)
+      .single();
 
     return new Response(
       JSON.stringify({
@@ -49,6 +59,8 @@ export async function GET(request: NextRequest) {
         isActive: config.isActive,
         webhookUrl,
         webhookConfigured: config.isActive,
+        linked: !!connection,
+        chatId: connection?.telegram_chat_id || null,
       }),
       {
         status: 200,
@@ -110,7 +122,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const webhookUrl = getWebhookUrl(webhookSecret, appUrl);
+    const webhookUrl = getWebhookUrl(webhookSecret, appUrl, sessionId);
     const webhookResult = await setUserWebhook(botToken, webhookUrl, webhookSecret);
 
     if (!webhookResult.success) {
@@ -122,6 +134,7 @@ export async function POST(request: NextRequest) {
       botUsername: botInfo.username,
       webhookSecret,
       isActive: webhookResult.success,
+      sessionId,
     };
 
     await storeTelegramBot(sessionId, config);
@@ -164,6 +177,12 @@ export async function DELETE(request: NextRequest) {
     if (config) {
       await deleteUserWebhook(config.botToken);
       await deleteTelegramBot(sessionId);
+
+      const supabase = getSupabaseAdmin();
+      await supabase
+        .from("telegram_connections")
+        .update({ is_active: false })
+        .eq("user_id", sessionId);
     }
 
     return new Response(JSON.stringify({ success: true }), {

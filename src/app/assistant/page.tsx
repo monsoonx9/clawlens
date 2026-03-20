@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, KeyboardEvent } from "react";
 import { useAssistantStore } from "@/store/assistantStore";
 import { useToast } from "@/components/ui/Toast";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { TelegramBotSettings } from "@/components/settings/TelegramBotSettings";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
@@ -83,13 +82,12 @@ const itemVariants: Variants = {
 export default function AssistantPage() {
   const { toast } = useToast();
   const store = useAssistantStore();
-  const prefersReduced = useReducedMotion();
   const activeSessionRef = useRef<AssistantSession | null>(null);
+  const sessionsLoadedRef = useRef(false);
 
   const sessions = store.sessions;
   const activeSession = store.activeSession;
   const messages = store.messages;
-  const isLoading = store.isLoading;
   const isStreaming = store.isStreaming;
   const error = store.error;
   const personality = store.personality;
@@ -146,6 +144,7 @@ export default function AssistantPage() {
           activeSessionRef.current = data.sessions[0];
         }
       }
+      sessionsLoadedRef.current = true;
     } catch (err) {
       console.error("Failed to load sessions:", err);
       toast("error", "Failed to load conversations");
@@ -181,6 +180,7 @@ export default function AssistantPage() {
   }, [loadSessions]);
 
   useEffect(() => {
+    if (!sessionsLoadedRef.current) return;
     if (activeSession) {
       activeSessionRef.current = activeSession;
       loadMessages(activeSession.sessionId);
@@ -344,7 +344,7 @@ export default function AssistantPage() {
 
       const decoder = new TextDecoder();
 
-      while (reader) {
+      for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -673,7 +673,7 @@ export default function AssistantPage() {
                 </motion.p>
                 <motion.div variants={containerVariants} className="w-full max-w-2xl">
                   <div className="flex sm:grid sm:grid-cols-2 gap-2 sm:gap-3 w-[calc(100vw-16px)] sm:w-full max-w-2xl px-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 sm:pb-0 -mx-4 sm:mx-0">
-                    {QUICK_PROMPTS.map((prompt, i) => (
+                    {QUICK_PROMPTS.map((prompt) => (
                       <motion.button
                         key={prompt.id}
                         variants={itemVariants}

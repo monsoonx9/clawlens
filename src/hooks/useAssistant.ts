@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { AssistantMessage, AssistantSession, PersonalityType } from "@/types";
+import { AssistantMessage, AssistantSession } from "@/types";
 
 interface UseAssistantOptions {
   onMessage?: (message: AssistantMessage) => void;
@@ -14,24 +14,10 @@ export function useAssistant(options?: UseAssistantOptions) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const activeSessionRef = useRef(activeSession);
+  const loadMessagesRef = useRef<(sessionId: string) => Promise<void>>();
 
-  const loadSessions = useCallback(async () => {
-    try {
-      const res = await fetch("/api/assistant/sessions", {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.sessions) {
-        setSessions(data.sessions);
-        if (data.sessions.length > 0 && !activeSession) {
-          setActiveSession(data.sessions[0]);
-          await loadMessages(data.sessions[0].sessionId);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load sessions:", err);
-    }
-  }, [activeSession]);
+  activeSessionRef.current = activeSession;
 
   const loadMessages = useCallback(async (sessionId: string) => {
     try {
@@ -44,6 +30,26 @@ export function useAssistant(options?: UseAssistantOptions) {
       }
     } catch (err) {
       console.error("Failed to load messages:", err);
+    }
+  }, []);
+
+  loadMessagesRef.current = loadMessages;
+
+  const loadSessions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/assistant/sessions", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.sessions) {
+        setSessions(data.sessions);
+        if (data.sessions.length > 0 && !activeSessionRef.current) {
+          setActiveSession(data.sessions[0]);
+          loadMessagesRef.current?.(data.sessions[0].sessionId);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load sessions:", err);
     }
   }, []);
 
@@ -112,7 +118,7 @@ export function useAssistant(options?: UseAssistantOptions) {
         let streamingContent = "";
         let fullContent = "";
 
-        while (reader) {
+        for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
 

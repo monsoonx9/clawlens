@@ -26,7 +26,6 @@ import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { PROVIDER_MODELS, PROVIDER_DISPLAY_NAMES } from "@/lib/providers";
 import { TelegramBotSettings } from "@/components/settings/TelegramBotSettings";
-import { TelegramConnection } from "@/components/settings/TelegramConnection";
 
 export default function SettingsPage() {
   const { apiKeys, preferences, setAPIKeys, saveKeysToServer, updatePreferences } = useAppStore();
@@ -674,7 +673,6 @@ export default function SettingsPage() {
 
         {/* 4. TELEGRAM BOT */}
         <section className="glass-card p-6 sm:p-8">
-          <TelegramConnection />
           <TelegramBotSettings />
         </section>
       </div>

@@ -249,6 +249,50 @@ export class ChatManager {
     return `asst_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
+  async getLastInvokedSkills(sessionId: string): Promise<string[]> {
+    const { data, error } = await this.supabase
+      .from("personal_assistant_sessions")
+      .select("preferences")
+      .eq("session_id", sessionId)
+      .single();
+
+    if (error || !data) {
+      return [];
+    }
+
+    return data.preferences?.lastInvokedSkills || [];
+  }
+
+  async updateLastInvokedSkills(
+    sessionId: string,
+    userId: string,
+    skills: string[],
+  ): Promise<void> {
+    const { data, error } = await this.supabase
+      .from("personal_assistant_sessions")
+      .select("preferences")
+      .eq("session_id", sessionId)
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !data) {
+      return;
+    }
+
+    const currentPrefs = data.preferences || {};
+    const updatedPrefs = {
+      ...currentPrefs,
+      lastInvokedSkills: skills.slice(0, 5),
+      lastInvokedAt: new Date().toISOString(),
+    };
+
+    await this.supabase
+      .from("personal_assistant_sessions")
+      .update({ preferences: updatedPrefs })
+      .eq("session_id", sessionId)
+      .eq("user_id", userId);
+  }
+
   private mapSession(data: any): AssistantSession {
     return {
       id: data.id,

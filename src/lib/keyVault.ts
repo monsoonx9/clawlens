@@ -4,6 +4,7 @@ import { getVaultSecret } from "./env";
 import { APIKeys } from "@/types";
 
 const KEYS_TTL = 60 * 60 * 24 * 30;
+const LINK_CODE_TTL = 60 * 5;
 
 function getKeysRedisKey(sessionId: string): string {
   return `vault:keys:${sessionId}`;
@@ -11,6 +12,10 @@ function getKeysRedisKey(sessionId: string): string {
 
 function getTelegramBotRedisKey(sessionId: string): string {
   return `vault:telegram:${sessionId}`;
+}
+
+function getLinkCodeRedisKey(code: string): string {
+  return `telegram:link:${code}`;
 }
 
 export function encryptKeys(keys: APIKeys): string {
@@ -40,7 +45,6 @@ export async function storeKeys(sessionId: string, keys: APIKeys): Promise<boole
   try {
     const encrypted = encryptKeys(keys);
     await redis.set(getKeysRedisKey(sessionId), encrypted, { ex: KEYS_TTL });
-    console.log(`[KeyVault] Keys stored for session ${sessionId.slice(0, 8)}...`);
     return true;
   } catch (error) {
     console.error("[KeyVault] Failed to store keys:", error);
@@ -75,7 +79,6 @@ export async function deleteKeys(sessionId: string): Promise<boolean> {
 
   try {
     await redis.del(getKeysRedisKey(sessionId));
-    console.log(`[KeyVault] Keys deleted for session ${sessionId.slice(0, 8)}...`);
     return true;
   } catch (error) {
     console.error("[KeyVault] Failed to delete keys:", error);
@@ -102,6 +105,7 @@ export interface TelegramBotConfig {
   botUsername: string;
   webhookSecret: string;
   isActive: boolean;
+  sessionId: string;
 }
 
 export function encryptTelegramBot(config: TelegramBotConfig): string {
@@ -134,7 +138,6 @@ export async function storeTelegramBot(
   try {
     const encrypted = encryptTelegramBot(config);
     await redis.set(getTelegramBotRedisKey(sessionId), encrypted, { ex: KEYS_TTL });
-    console.log(`[KeyVault] Telegram bot stored for session ${sessionId.slice(0, 8)}...`);
     return true;
   } catch (error) {
     console.error("[KeyVault] Failed to store Telegram bot:", error);
@@ -142,10 +145,11 @@ export async function storeTelegramBot(
   }
 }
 
-export async function getTelegramBot(sessionId: string): Promise<TelegramBotConfig | null> {
+export async function getTelegramBotBySession(
+  sessionId: string,
+): Promise<TelegramBotConfig | null> {
   const redis = getRedis();
   if (!redis) {
-    console.error("[KeyVault] Redis not available");
     return null;
   }
 
@@ -169,7 +173,6 @@ export async function deleteTelegramBot(sessionId: string): Promise<boolean> {
 
   try {
     await redis.del(getTelegramBotRedisKey(sessionId));
-    console.log(`[KeyVault] Telegram bot deleted for session ${sessionId.slice(0, 8)}...`);
     return true;
   } catch (error) {
     console.error("[KeyVault] Failed to delete Telegram bot:", error);
@@ -189,4 +192,42 @@ export async function hasTelegramBot(sessionId: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function generateLinkCode(sessionId: string): Promise<string | null> {
+  const redis = getRedis();
+  if (!redis) {
+    return null;
+  }
+
+  try {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    await redis.set(getLinkCodeRedisKey(code), sessionId, { ex: LINK_CODE_TTL });
+    return code;
+  } catch (error) {
+    console.error("[KeyVault] Failed to generate link code:", error);
+    return null;
+  }
+}
+
+export async function validateLinkCode(code: string): Promise<string | null> {
+  const redis = getRedis();
+  if (!redis) {
+    return null;
+  }
+
+  try {
+    const sessionId = await redis.get<string>(getLinkCodeRedisKey(code));
+    if (sessionId) {
+      await redis.del(getLinkCodeRedisKey(code));
+    }
+    return sessionId;
+  } catch (error) {
+    console.error("[KeyVault] Failed to validate link code:", error);
+    return null;
+  }
+}
+
+export async function getTelegramBot(sessionId: string): Promise<TelegramBotConfig | null> {
+  return getTelegramBotBySession(sessionId);
 }

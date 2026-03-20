@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/notifications",
+      "schedule": "* * * * *"
+    }
+  ],
+  "env": {
+    "CRON_SECRET": {
+      "description": "Secret for authenticating cron job requests"
+    }
+  }
+}

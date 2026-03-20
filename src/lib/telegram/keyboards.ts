@@ -1,10 +1,10 @@
 export function getMainKeyboard() {
   return {
     keyboard: [
-      [{ text: "📊 Portfolio", callback_data: "action_portfolio" }],
-      [{ text: "💰 Price", callback_data: "action_price" }],
-      [{ text: "🔔 Alerts", callback_data: "action_alerts" }],
-      [{ text: "⚙️ Settings", callback_data: "action_settings" }],
+      [{ text: "📊 Portfolio" }],
+      [{ text: "💰 Price" }],
+      [{ text: "🔔 Alerts" }],
+      [{ text: "⚙️ Settings" }],
     ],
     resize_keyboard: true,
     one_time_keyboard: false,
@@ -44,6 +44,26 @@ export function getPortfolioKeyboard() {
       [{ text: "📈 P&L", callback_data: "portfolio_pnl" }],
       [{ text: "💼 Holdings", callback_data: "portfolio_holdings" }],
       [{ text: "📊 Analysis", callback_data: "portfolio_analysis" }],
+      [{ text: "« Back", callback_data: "back_main" }],
+    ],
+  };
+}
+
+export function getHelpKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        { text: "📊 Portfolio", callback_data: "help_portfolio" },
+        { text: "💰 Prices", callback_data: "help_prices" },
+      ],
+      [
+        { text: "🐋 Whales", callback_data: "help_whales" },
+        { text: "🔔 Alerts", callback_data: "help_alerts" },
+      ],
+      [
+        { text: "📈 Analysis", callback_data: "help_analysis" },
+        { text: "🛡️ Rug Check", callback_data: "help_rug" },
+      ],
       [{ text: "« Back", callback_data: "back_main" }],
     ],
   };

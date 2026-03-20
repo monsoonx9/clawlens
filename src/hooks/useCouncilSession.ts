@@ -115,6 +115,8 @@ export function useCouncilSession() {
   } = useAppStore();
 
   const { trackEvent } = useAnalytics();
+  const trackEventRef = useRef(trackEvent);
+  trackEventRef.current = trackEvent;
 
   const refreshPortfolio = useCallback(async () => {
     if (!apiKeys?.binanceApiKey || !apiKeys?.binanceSecretKey) {
@@ -408,7 +410,7 @@ export function useCouncilSession() {
         }
 
         case "done": {
-          trackEvent("session_complete");
+          trackEventRef.current("session_complete");
           break;
         }
       }

@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  X,
-  Crown,
-  Lock,
-  CheckCircle,
-  AlertTriangle,
-  Loader2,
-  Share2,
-  ExternalLink,
-} from "lucide-react";
+import { X, Lock, CheckCircle, AlertTriangle, Loader2, Share2, ExternalLink } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { postToSquare, SquarePostResult } from "@/lib/squareClient";
 

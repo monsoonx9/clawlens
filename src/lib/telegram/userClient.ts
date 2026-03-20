@@ -108,6 +108,32 @@ export class UserTelegramClient {
     return data.result;
   }
 
+  async setMyCommands(commands: Array<{ command: string; description: string }>): Promise<boolean> {
+    const url = `${this.baseUrl}/setMyCommands`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        commands: commands.map((c) => ({ command: c.command, description: c.description })),
+      }),
+    });
+    const data = await response.json();
+    return data.ok;
+  }
+
+  async setChatMenuButton(): Promise<boolean> {
+    const url = `${this.baseUrl}/setChatMenuButton`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        menu_button: { type: "commands" },
+      }),
+    });
+    const data = await response.json();
+    return data.ok;
+  }
+
   static fromConfig(config: TelegramBotConfig): UserTelegramClient {
     return new UserTelegramClient(config.botToken);
   }

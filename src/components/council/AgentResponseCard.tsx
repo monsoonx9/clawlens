@@ -268,6 +268,11 @@ function SmoothStreamingText({ content, isStreaming }: { content: string; isStre
   const [isComplete, setIsComplete] = useState(!isStreaming);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const targetContentRef = useRef(content);
+  const displayedTextRef = useRef(displayedText);
+
+  useEffect(() => {
+    displayedTextRef.current = displayedText;
+  }, [displayedText]);
 
   // Update ref when content changes (not during render)
   useEffect(() => {
@@ -312,8 +317,9 @@ function SmoothStreamingText({ content, isStreaming }: { content: string; isStre
     const totalLength = targetText.length;
 
     // If new content is longer than current display, start from current position
-    if (displayedText.length > 0 && targetText.startsWith(displayedText)) {
-      currentIndex = displayedText.length;
+    const currentDisplayed = displayedTextRef.current;
+    if (currentDisplayed.length > 0 && targetText.startsWith(currentDisplayed)) {
+      currentIndex = currentDisplayed.length;
     }
 
     if (currentIndex >= totalLength) {

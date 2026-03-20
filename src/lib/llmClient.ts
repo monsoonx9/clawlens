@@ -1,4 +1,5 @@
 import { LLMProvider, PortfolioSnapshot, UserPreferences } from "@/types";
+import { getFallbackModel as getProviderFallback, MODEL_FALLBACKS } from "./providers";
 
 interface ProxyFetchOptions {
   method?: string;
@@ -45,13 +46,13 @@ export function getDefaultModel(provider: LLMProvider): string {
     case "groq":
       return "llama-3.3-70b-versatile";
     case "gemini":
-      return "gemini-3.1-flash-lite-preview";
+      return "gemini-3.1-pro";
     case "azure-openai":
       return "gpt-5.4";
     case "ollama":
       return "deepseek-r1";
     case "openrouter":
-      return "openai/gpt-5.4";
+      return "anthropic/claude-sonnet-4-6";
     case "minimax":
       return "MiniMax-M2.5";
     case "ollama-cloud":
@@ -415,7 +416,6 @@ async function* streamAnthropic(
     headers: {
       "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -858,7 +858,6 @@ export async function callAgentOnce(
         headers: {
           "x-api-key": apiKeyOpts.apiKey,
           "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

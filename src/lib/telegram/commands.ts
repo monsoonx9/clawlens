@@ -1,5 +1,11 @@
-import { telegramClient } from "./client";
-import { getMainKeyboard, getSettingsKeyboard, getAlertsKeyboard } from "./keyboards";
+import {
+  getMainKeyboard,
+  getSettingsKeyboard,
+  getAlertsKeyboard,
+  getHelpKeyboard,
+} from "./keyboards";
+import { telegramSkillService } from "./telegramSkillService";
+import { getSupabaseAdmin } from "@/lib/supabaseClient";
 
 interface CommandContext {
   chatId: number;
@@ -8,198 +14,275 @@ interface CommandContext {
   firstName?: string;
 }
 
-export const COMMANDS = {
-  start: {
-    name: "start",
-    description: "Start the bot and get welcome message",
-  },
-  help: {
-    name: "help",
-    description: "Show help menu and available commands",
-  },
-  link: {
-    name: "link",
-    description: "Link your Telegram to your web account",
-  },
-  unlink: {
-    name: "unlink",
-    description: "Unlink your Telegram from your web account",
-  },
-  portfolio: {
-    name: "portfolio",
-    description: "Get your portfolio summary",
-  },
-  price: {
-    name: "price",
-    description: "Get price of a token (e.g., /price BTC)",
-  },
-  alerts: {
-    name: "alerts",
-    description: "Manage your price alerts",
-  },
-  settings: {
-    name: "settings",
-    description: "Bot settings and preferences",
-  },
-  ask: {
-    name: "ask",
-    description: "Ask a quick question (e.g., /ask what's the price of ETH?)",
-  },
-};
+const supabase = getSupabaseAdmin();
 
 export async function handleStartCommand(context: CommandContext): Promise<string> {
-  const user = await telegramClient.getUserByChatId(context.chatId);
-
-  if (user) {
-    return `Welcome back, ${context.firstName || "there"}! 👋
-
-You're already linked to your ClawLens account.
-
-Use /help to see available commands, or just ask me anything!`;
-  }
-
   return `Welcome to ClawLens Bot, ${context.firstName || "there"}! 👋
 
-I'm your personal AI trading assistant. I can help you with:
+Your personal AI trading assistant with access to 50+ skills!
 
-📊 <b>Portfolio</b> - View your portfolio
-💰 <b>Prices</b> - Get token prices
-🔔 <b>Alerts</b> - Set price alerts
-⚙️ <b>Settings</b> - Customize your experience
+I can help you with:
+📊 Portfolio analysis
+💰 Token prices & charts
+🐋 Whale tracking
+🔔 Price alerts
+📈 Technical analysis
+🛡️ Rug checks
+💬 Natural language queries
 
-To get started, link your account with /link or just ask me anything!
+To access your personal account:
+1. Go to ClawLens Dashboard → Settings → Telegram Bot
+2. Click "Generate Link Code"
+3. Send /link CODE to this bot
 
-Type /help for all commands.`;
+Or just ask me anything!`;
 }
 
-export async function handleHelpCommand(context: CommandContext): Promise<string> {
-  return `🛠 <b>Available Commands</b>
+export async function handleHelpCommand(
+  _context: CommandContext,
+): Promise<{ text: string; keyboard?: unknown }> {
+  return {
+    text: `🛠 *Available Commands*
 
-/start - Welcome message
-/help - Show this menu
-/link - Link your account
-/unlink - Unlink your account
-
-📊 <b>Portfolio</b>
+*📊 Portfolio*
 /portfolio - Your portfolio summary
 
-💰 <b>Prices</b>
-/price [symbol] - Get token price (e.g., /price BTC)
+*💰 Prices*
+/price BTC - Get token price
 
-🔔 <b>Alerts</b>
+*🐋 Whale Tracking*
+/whale - Recent whale activity
+/subscribe whale - Enable whale alerts
+
+*🔔 Alerts*
 /alerts - Manage price alerts
+/subscribe news - Enable news alerts
 
-⚙️ <b>Settings</b>
+*⚙️ Settings*
 /settings - Bot preferences
+/digest set 9:00 - Daily summary time
 
-💬 <b>Quick Ask</b>
-/ask [question] - Quick question
+*💬 Quick Ask*
+Just send any message and I'll analyze it!
 
-Just send me a message and I'll help you with anything!`;
-}
-
-export async function handleLinkCommand(
-  context: CommandContext,
-): Promise<{ text: string; keyboard?: any }> {
-  return {
-    text: `🔗 <b>Link Your Account</b>
-
-To link your Telegram to your ClawLens web account:
-
-1. Go to your ClawLens dashboard
-2. Navigate to Settings
-3. Look for "Telegram Connection"
-4. Enter this chat ID: <code>${context.chatId}</code>
-
-Once linked, you'll be able to access your portfolio and receive alerts directly in Telegram!`,
-    keyboard: getMainKeyboard(),
+*Examples:*
+"What's my portfolio value?"
+"Check BTC price"
+"Is this token safe? [address]"
+"Analyze my holdings"`,
+    keyboard: getHelpKeyboard(),
   };
 }
 
-export async function handleUnlinkCommand(context: CommandContext): Promise<string> {
-  const user = await telegramClient.getUserByChatId(context.chatId);
-
-  if (!user) {
-    return "Your Telegram is not linked to any account.";
-  }
-
-  await telegramClient.unlinkUser(context.chatId);
-
-  return "✅ Your Telegram has been unlinked from your ClawLens account.";
-}
-
 export async function handlePortfolioCommand(context: CommandContext): Promise<string> {
-  const user = await telegramClient.getUserByChatId(context.chatId);
-
-  if (!user) {
-    return "❌ Please link your account first with /link";
+  if (!context.userId) {
+    return "❌ Please link your account first. Send /link CODE to connect.";
   }
 
-  return `📊 <b>Portfolio</b>
+  const result = await telegramSkillService.execute(
+    "claw-council/portfolio-pulse",
+    {},
+    { userId: context.userId },
+  );
 
-I'm fetching your portfolio now! You can also just ask me:
-• "Show my portfolio"
-• "What's my PnL?"
-• "How risky is my portfolio?"
-
-I'll analyze your Binance holdings with real-time data.`;
-}
-
-export async function handlePriceCommand(context: CommandContext, args: string): Promise<string> {
-  const symbol = args.trim().toUpperCase();
-
-  if (!symbol) {
-    return "Please specify a symbol. Example: /price BTC";
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "❌ Failed to fetch portfolio. Please try again.";
   }
 
-  return `💰 <b>${symbol}</b>
-
-Just ask me directly! For example:
-• "What's the price of ${symbol}?"
-• "${symbol} technical analysis"
-• "Is ${symbol} a good buy?"
-
-I'll fetch live data from Binance and analyze it for you.`;
+  return result.formattedMessage;
 }
 
 export async function handleAlertsCommand(
   context: CommandContext,
-): Promise<{ text: string; keyboard?: any } | string> {
-  const user = await telegramClient.getUserByChatId(context.chatId);
-
-  if (!user) {
-    return "❌ Please link your account first with /link";
+): Promise<{ text: string; keyboard?: unknown } | string> {
+  if (!context.userId) {
+    return "❌ Please link your account first. Send /link CODE to connect.";
   }
 
-  return {
-    text: "🔔 <b>Price Alerts</b>\n\nManage your price alerts:",
-    keyboard: getAlertsKeyboard(),
-  };
+  const { data: alerts } = await supabase
+    .from("price_alerts")
+    .select("*")
+    .eq("user_id", context.userId)
+    .eq("triggered", false)
+    .limit(10);
+
+  let message = "🔔 *Price Alerts*\n\n";
+
+  if (!alerts || alerts.length === 0) {
+    message += 'No active alerts.\n\nCreate one: "Alert me when BTC hits $100k"';
+  } else {
+    message += `*Active Alerts (${alerts.length}):*\n\n`;
+    for (const alert of alerts.slice(0, 5)) {
+      const emoji = alert.condition === "above" ? "📈" : "📉";
+      message += `${emoji} ${alert.symbol} ${alert.condition} $${alert.target_price}\n`;
+    }
+  }
+
+  return { text: message, keyboard: getAlertsKeyboard() };
 }
 
 export async function handleSettingsCommand(
   context: CommandContext,
-): Promise<{ text: string; keyboard?: any } | string> {
+): Promise<{ text: string; keyboard?: unknown } | string> {
+  if (!context.userId) {
+    return "❌ Please link your account first. Send /link CODE to connect.";
+  }
+
+  const { data: settings } = await supabase
+    .from("telegram_connections")
+    .select("notification_settings")
+    .eq("user_id", context.userId)
+    .single();
+
+  const ns = settings?.notification_settings || {};
+
+  const priceEmoji = ns.priceAlerts !== false ? "✅" : "❌";
+  const whaleEmoji = ns.whaleAlerts !== false ? "✅" : "❌";
+  const digestEmoji = ns.portfolioDigest !== false ? "✅" : "❌";
+  const newsEmoji = ns.newsAlerts !== false ? "✅" : "❌";
+
+  const digestTime = ns.digestTime || "09:00";
+
   return {
-    text: "⚙️ <b>Settings</b>\n\nCustomize your experience:",
+    text: `⚙️ *Notification Settings*
+
+${priceEmoji} Price Alerts
+${whaleEmoji} Whale Alerts
+${newsEmoji} News Alerts
+${digestEmoji} Daily Digest (${digestTime})
+
+Use /subscribe [whale|news] to toggle
+Use /digest set HH:MM to change time
+
+Manage all settings in the ClawLens web app.`,
     keyboard: getSettingsKeyboard(),
   };
 }
 
-export async function handleAskCommand(context: CommandContext, question: string): Promise<string> {
-  const user = await telegramClient.getUserByChatId(context.chatId);
-
-  if (!user) {
-    return "❌ Please link your account first with /link to use AI features.";
+export async function handleSubscribeCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  if (!context.userId) {
+    return "❌ Please link your account first. Send /link CODE to connect.";
   }
 
-  if (!question.trim()) {
-    return "Please provide a question. Example: /ask what's the price of ETH?";
+  const type = args.toLowerCase().trim();
+
+  if (!type || !["whale", "news", "portfolio"].includes(type)) {
+    return `*Subscribe to Alerts*
+
+Usage: /subscribe [type]
+
+Types:
+• whale - Get whale movement alerts
+• news - Get crypto news alerts
+• portfolio - Get daily summaries
+
+Example: /subscribe whale`;
   }
 
-  return `🤖 Processing your question: "<i>${question}</i>"
+  const { notificationService } = await import("./notificationService");
 
-Please wait while I fetch the data...`;
+  switch (type) {
+    case "whale":
+      await notificationService.updateUserNotificationSettings(context.userId, {
+        whaleAlerts: true,
+      });
+      return "✅ *Whale Alerts Enabled*\n\nYou'll receive notifications when tracked whale wallets make significant moves.";
+
+    case "news":
+      await notificationService.updateUserNotificationSettings(context.userId, {
+        newsAlerts: true,
+      });
+      return "✅ *News Alerts Enabled*\n\nYou'll receive notifications for important crypto news.";
+
+    case "portfolio":
+      await notificationService.updateUserNotificationSettings(context.userId, {
+        portfolioDigest: true,
+      });
+      return "✅ *Portfolio Digest Enabled*\n\nUse /digest set HH:MM to set your preferred time.";
+
+    default:
+      return "Unknown subscription type.";
+  }
+}
+
+export async function handleDigestCommand(context: CommandContext, args: string): Promise<string> {
+  if (!context.userId) {
+    return "❌ Please link your account first. Send /link CODE to connect.";
+  }
+
+  const parts = args.toLowerCase().trim().split(/\s+/);
+
+  if (parts[0] === "off" || parts[0] === "disable") {
+    await (
+      await import("./notificationService")
+    ).notificationService.updateUserNotificationSettings(context.userId, {
+      portfolioDigest: false,
+    });
+    return "❌ *Portfolio Digest Disabled*";
+  }
+
+  if (parts[0] === "set" && parts[1]) {
+    const time = parts[1];
+    if (!/^\d{1,2}:\d{2}$/.test(time)) {
+      return "❌ Invalid format. Use: /digest set 09:00";
+    }
+
+    await (
+      await import("./notificationService")
+    ).notificationService.updateUserNotificationSettings(context.userId, {
+      portfolioDigest: true,
+      digestTime: time,
+    });
+    return `✅ *Digest Time Set*\n\nYou'll receive your portfolio summary daily at ${time}.`;
+  }
+
+  return `*Daily Portfolio Digest*
+
+Usage:
+• /digest set 09:00 - Set daily time
+• /digest off - Disable
+
+Get a daily summary of your portfolio P&L and top movers.`;
+}
+
+export async function handleWhaleCommand(context: CommandContext): Promise<string> {
+  const result = await telegramSkillService.execute(
+    "claw-council/whale-radar",
+    { limit: 10 },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "❌ Failed to fetch whale data.";
+  }
+
+  return result.formattedMessage;
+}
+
+export async function handleRugCheckCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const address = args.trim();
+
+  if (!address) {
+    return "Please provide a contract address.\n\nExample: /rug 0x1234...abcd";
+  }
+
+  const result = await telegramSkillService.execute(
+    "claw-council/rug-shield",
+    { contractAddress: address },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "❌ Failed to check contract.";
+  }
+
+  return result.formattedMessage;
 }
 
 export function parseCommand(text: string): { command: string; args: string } | null {

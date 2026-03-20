@@ -6,22 +6,30 @@ export function generateWebhookSecret(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
-export function getWebhookUrl(secret: string, baseUrl?: string): string {
+export function getWebhookUrl(secret: string, baseUrl?: string, sessionId?: string): string {
   let host = (
     baseUrl ||
     process.env.NEXT_PUBLIC_APP_URL ||
     "https://your-domain.vercel.app"
   ).replace(/\/$/, "");
 
-  // Telegram requires HTTPS. Force upgrade if accidentally set to HTTP.
   if (host.startsWith("http://") && !host.includes("localhost")) {
     host = host.replace("http://", "https://");
   }
 
-  return `${host}/api/telegram/webhook/${secret}`;
+  const basePath = `/api/telegram/webhook/${secret}`;
+
+  if (sessionId) {
+    return `${host}${basePath}/${sessionId}`;
+  }
+
+  return `${host}${basePath}`;
 }
 
 export function verifyWebhookSecret(secret: string, providedSecret: string): boolean {
+  if (secret.length !== providedSecret.length) {
+    return false;
+  }
   return crypto.timingSafeEqual(Buffer.from(secret), Buffer.from(providedSecret));
 }
 

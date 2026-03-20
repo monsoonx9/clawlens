@@ -21,7 +21,7 @@ export function Select({
   value,
   onChange,
   options,
-  placeholder = "Select an option",
+  placeholder: _placeholder = "Select an option",
   label,
   disabled = false,
   className = "",

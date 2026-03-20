@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   X,
   Shield,
@@ -83,13 +83,8 @@ export function TokenAuditModal({ isOpen, onClose, contractAddress, chain, token
   const [result, setResult] = useState<TokenAuditData | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (isOpen && contractAddress) {
-      fetchAudit();
-    }
-  }, [isOpen, contractAddress, chain]);
-
-  const fetchAudit = async () => {
+  const fetchAudit = useCallback(async () => {
+    if (!contractAddress || !chain) return;
     setLoading(true);
     setError(null);
     setResult(null);
@@ -114,7 +109,13 @@ export function TokenAuditModal({ isOpen, onClose, contractAddress, chain, token
     } finally {
       setLoading(false);
     }
-  };
+  }, [contractAddress, chain]);
+
+  useEffect(() => {
+    if (isOpen && contractAddress) {
+      fetchAudit();
+    }
+  }, [isOpen, contractAddress, chain, fetchAudit]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {

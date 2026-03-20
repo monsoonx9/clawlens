@@ -103,7 +103,7 @@ export function TrendingTokensWidget() {
         } else if (!silent) {
           setError(result.summary || "Failed to fetch");
         }
-      } catch (err) {
+      } catch {
         if (!silent) setError("Failed to load data");
       } finally {
         if (!silent) setLoading(false);

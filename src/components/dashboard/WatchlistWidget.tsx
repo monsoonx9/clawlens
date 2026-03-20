@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Star,
-  Plus,
-  X,
-  TrendingUp,
-  TrendingDown,
-  Loader2,
-  Bell,
-  TrendingUpIcon,
-} from "lucide-react";
+import { Star, Plus, X, TrendingUp, TrendingDown, Loader2, Bell } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { WatchlistToken } from "@/types";
 

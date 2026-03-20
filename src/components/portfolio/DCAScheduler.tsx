@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Loader2, AlertCircle, RefreshCw, Calendar } from "lucide-react";
 import { getSkill } from "@/skills";
 import { useAppStore } from "@/store/useAppStore";
-import { clsx } from "clsx";
 
 interface DCASchedule {
   week: number;
@@ -33,6 +32,7 @@ function formatUSD(value: number): string {
 
 export function DCAScheduler() {
   const apiKeys = useAppStore((s) => s.apiKeys);
+  const apiKeysRef = useRef(apiKeys);
   const [data, setData] = useState<DCAStrategistData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,12 @@ export function DCAScheduler() {
   const [budget, setBudget] = useState(1000);
   const [weeks, setWeeks] = useState(12);
 
+  useEffect(() => {
+    apiKeysRef.current = apiKeys;
+  }, [apiKeys]);
+
   const fetchData = useCallback(async () => {
+    const currentApiKeys = apiKeysRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -53,8 +58,8 @@ export function DCAScheduler() {
         { targetAsset: asset, totalBudgetUSD: budget, durationWeeks: weeks, riskTolerance: 5 },
         {
           apiKeys: {
-            binanceApiKey: apiKeys?.binanceApiKey || "",
-            binanceSecretKey: apiKeys?.binanceSecretKey || "",
+            binanceApiKey: currentApiKeys?.binanceApiKey || "",
+            binanceSecretKey: currentApiKeys?.binanceSecretKey || "",
           },
         },
       );
@@ -72,7 +77,7 @@ export function DCAScheduler() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   if (loading) {
     return (

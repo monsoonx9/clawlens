@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Loader2, AlertCircle, RefreshCw, BarChart2, Eye, EyeOff } from "lucide-react";
 import { clsx } from "clsx";
@@ -27,7 +27,11 @@ function formatPrice(value: number): string {
   return `$${value.toFixed(6)}`;
 }
 
-export function OrderBookDepth({ contractAddress }: { contractAddress?: string }) {
+export function OrderBookDepth({
+  contractAddress: _contractAddress,
+}: {
+  contractAddress?: string;
+}) {
   const [bids, setBids] = useState<OrderBookEntry[]>([]);
   const [asks, setAsks] = useState<OrderBookEntry[]>([]);
   const [spread, setSpread] = useState(0);
@@ -37,64 +41,69 @@ export function OrderBookDepth({ contractAddress }: { contractAddress?: string }
   const [symbol, setSymbol] = useState("BTCUSDT");
   const [showSpoofing, setShowSpoofing] = useState(true);
 
-  const fetchData = async (silent = false) => {
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const res = await fetch("/api/market", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "orderBook", params: { symbol, limit: 20 } }),
-      });
-      const result = await res.json();
-      if (result.success && result.data) {
-        const { bids: rawBids, asks: rawAsks, spread: rawSpread } = result.data;
-
-        let bidCumulative = 0;
-        const processedBids: OrderBookEntry[] = rawBids
-          .slice(0, 10)
-          .map(([price, qty]: [number, number]) => {
-            bidCumulative += price * qty;
-            return { price, quantity: qty, total: bidCumulative };
-          });
-
-        let askCumulative = 0;
-        const processedAsks: OrderBookEntry[] = rawAsks
-          .slice(0, 10)
-          .map(([price, qty]: [number, number]) => {
-            askCumulative += price * qty;
-            return { price, quantity: qty, total: askCumulative };
-          });
-
-        setBids(processedBids);
-        setAsks(processedAsks);
-        setSpread(rawSpread);
-
-        if (rawBids.length > 0 && rawAsks.length > 0) {
-          setMidPrice((rawBids[0][0] + rawAsks[0][0]) / 2);
-        }
-      } else if (!silent) {
-        setError(result.error || "Failed to fetch");
+  const fetchData = useCallback(
+    async (silent = false, currentSymbol?: string) => {
+      const activeSymbol = currentSymbol ?? symbol;
+      if (!silent) {
+        setLoading(true);
+        setError(null);
       }
-    } catch {
-      if (!silent) setError("Failed to fetch order book");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
+      try {
+        const res = await fetch("/api/market", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "orderBook",
+            params: { symbol: activeSymbol, limit: 20 },
+          }),
+        });
+        const result = await res.json();
+        if (result.success && result.data) {
+          const { bids: rawBids, asks: rawAsks, spread: rawSpread } = result.data;
 
-  // Initial load
+          let bidCumulative = 0;
+          const processedBids: OrderBookEntry[] = rawBids
+            .slice(0, 10)
+            .map(([price, qty]: [number, number]) => {
+              bidCumulative += price * qty;
+              return { price, quantity: qty, total: bidCumulative };
+            });
+
+          let askCumulative = 0;
+          const processedAsks: OrderBookEntry[] = rawAsks
+            .slice(0, 10)
+            .map(([price, qty]: [number, number]) => {
+              askCumulative += price * qty;
+              return { price, quantity: qty, total: askCumulative };
+            });
+
+          setBids(processedBids);
+          setAsks(processedAsks);
+          setSpread(rawSpread);
+
+          if (rawBids.length > 0 && rawAsks.length > 0) {
+            setMidPrice((rawBids[0][0] + rawAsks[0][0]) / 2);
+          }
+        } else if (!silent) {
+          setError(result.error || "Failed to fetch");
+        }
+      } catch {
+        if (!silent) setError("Failed to fetch order book");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [symbol],
+  );
+
   useEffect(() => {
     fetchData(false);
-  }, [symbol]);
+  }, [fetchData]);
 
-  // Silent background refresh
   useEffect(() => {
     const interval = setInterval(() => fetchData(true), 60000);
     return () => clearInterval(interval);
-  }, [symbol]);
+  }, [fetchData]);
 
   const maxTotal =
     Math.max(

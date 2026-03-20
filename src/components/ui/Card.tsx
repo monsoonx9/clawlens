@@ -11,7 +11,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export function Card({
   children,
   className,
-  hover,
+  hover: _hover,
   glowColor,
   onClick,
   style,

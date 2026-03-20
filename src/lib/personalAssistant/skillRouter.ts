@@ -93,14 +93,91 @@ export class SkillRouter {
 
   /**
    * Analyze user intent against ALL registered skills.
-   * 1. First, check legacy high-confidence keyword overrides.
-   * 2. Then, dynamically score every skill in the registry using token overlap.
-   * 3. Deduplicate, sort by confidence, and return top matches.
+   * 1. First, check for follow-up patterns (repeat last skills)
+   * 2. Then, check legacy high-confidence keyword overrides.
+   * 3. Then, dynamically score every skill in the registry using token overlap.
+   * 4. Deduplicate, sort by confidence, and return top matches.
+   *
+   * @param userMessage - The user's message
+   * @param options - Optional context including prior messages and last invoked skills
    */
-  analyzeIntent(userMessage: string): SkillInvocation[] {
+  analyzeIntent(
+    userMessage: string,
+    options?: {
+      priorMessages?: Array<{ role: string; content: string }>;
+      lastInvokedSkills?: string[];
+    },
+  ): SkillInvocation[] {
     const messageLower = userMessage.toLowerCase();
     const messageTokens = tokenize(userMessage);
     const invocations = new Map<string, SkillInvocation>();
+
+    // ── Phase 0: Check for follow-up patterns ──
+    const followUpPatterns = [
+      "do it",
+      "do that",
+      "yes",
+      "yeah",
+      "sure",
+      "okay",
+      "ok",
+      "please",
+      "option 1",
+      "option 2",
+      "option 3",
+      "option 4",
+      "option 5",
+      "first option",
+      "second option",
+      "third option",
+      "fourth option",
+      "fifth option",
+      "the first",
+      "the second",
+      "the third",
+      "the fourth",
+      "the fifth",
+      "analyze that",
+      "tell me more",
+      "more details",
+      "more info",
+      "rebalance",
+      "rebalance my portfolio",
+      "suggest changes",
+      "make changes",
+      "what about",
+      "how about",
+      "what if",
+      "also",
+      "continue",
+      "keep going",
+      "go ahead",
+      "proceed",
+      "apply it",
+      "apply that",
+      "use that",
+      "use it",
+      "set it up",
+      "do that for me",
+      "help me with that",
+    ];
+
+    const isFollowUp = followUpPatterns.some((pattern) => messageLower.includes(pattern));
+
+    // If this is a follow-up and we have last invoked skills, repeat them with high confidence
+    if (isFollowUp && options?.lastInvokedSkills && options.lastInvokedSkills.length > 0) {
+      for (const skillId of options.lastInvokedSkills) {
+        const skill = getSkill(skillId);
+        if (skill && !INTERNAL_SKILLS.has(skillId)) {
+          invocations.set(skillId, {
+            skillId,
+            confidence: 0.95,
+            params: this.extractParamsFromMessage(userMessage),
+          });
+        }
+      }
+      // Still continue to check for explicit keywords - they might override
+    }
 
     // ── Phase 1: Legacy keyword overrides (high confidence) ──
     for (const [category, keywords] of Object.entries(SKILL_INVOCATION_KEYWORDS)) {
@@ -172,9 +249,10 @@ export class SkillRouter {
   async executeSkills(
     invocations: SkillInvocation[],
     context: SkillContext,
-  ): Promise<{ results: SkillResult[]; skillsUsed: string[] }> {
+  ): Promise<{ results: SkillResult[]; skillsUsed: string[]; failedSkills: string[] }> {
     const results: SkillResult[] = [];
     const skillsUsed: string[] = [];
+    const failedSkills: string[] = [];
 
     // Execute top 5 skills max (up from 3) to cover more ground
     const skillsToExecute = invocations.slice(0, 5);
@@ -182,28 +260,29 @@ export class SkillRouter {
     const SKILL_TIMEOUT_MS = 12000; // 12 seconds per skill
 
     for (const invocation of skillsToExecute) {
+      const skill = getSkill(invocation.skillId);
+      if (!skill) continue;
+
       try {
-        const skill = getSkill(invocation.skillId);
-        if (skill) {
-          const timeoutPromise = new Promise<SkillResult>((_, reject) =>
-            setTimeout(
-              () => reject(new Error(`Skill ${invocation.skillId} timed out`)),
-              SKILL_TIMEOUT_MS,
-            ),
-          );
-          const result = await Promise.race([
-            skill.execute(invocation.params, context),
-            timeoutPromise,
-          ]);
-          results.push(result);
-          skillsUsed.push(skill.name);
-        }
+        const timeoutPromise = new Promise<SkillResult>((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`Skill ${invocation.skillId} timed out`)),
+            SKILL_TIMEOUT_MS,
+          ),
+        );
+        const result = await Promise.race([
+          skill.execute(invocation.params, context),
+          timeoutPromise,
+        ]);
+        results.push(result);
+        skillsUsed.push(skill.name);
       } catch (error) {
         console.error(`[SkillRouter] Error executing skill ${invocation.skillId}:`, error);
+        failedSkills.push(skill.name);
       }
     }
 
-    return { results, skillsUsed };
+    return { results, skillsUsed, failedSkills };
   }
 
   getAvailableSkills(): Skill[] {

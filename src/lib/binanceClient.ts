@@ -516,7 +516,7 @@ export async function testConnectivity(
       canWithdraw: account.canWithdraw,
       permissions: account.permissions,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       accountType: "UNKNOWN",

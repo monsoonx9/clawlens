@@ -1,16 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import {
-  Loader2,
-  AlertCircle,
-  RefreshCw,
-  Target,
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-} from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, Target, TrendingUp, TrendingDown } from "lucide-react";
 import { getSkill } from "@/skills";
 import { useAppStore } from "@/store/useAppStore";
 import { clsx } from "clsx";
@@ -35,11 +27,17 @@ function formatUSD(value: string): string {
 
 export function TradeJournal() {
   const apiKeys = useAppStore((s) => s.apiKeys);
+  const apiKeysRef = useRef(apiKeys);
   const [data, setData] = useState<TradeJournalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async (silent = false) => {
+  useEffect(() => {
+    apiKeysRef.current = apiKeys;
+  }, [apiKeys]);
+
+  const fetchData = useCallback(async (silent = false) => {
+    const currentApiKeys = apiKeysRef.current;
     if (!silent) {
       setLoading(true);
       setError(null);
@@ -55,8 +53,8 @@ export function TradeJournal() {
         { symbols },
         {
           apiKeys: {
-            binanceApiKey: apiKeys?.binanceApiKey || "",
-            binanceSecretKey: apiKeys?.binanceSecretKey || "",
+            binanceApiKey: currentApiKeys?.binanceApiKey || "",
+            binanceSecretKey: currentApiKeys?.binanceSecretKey || "",
           },
         },
       );
@@ -92,18 +90,16 @@ export function TradeJournal() {
     } finally {
       if (!silent) setLoading(false);
     }
-  };
-
-  // Initial load
-  useEffect(() => {
-    fetchData(false);
   }, []);
 
-  // Silent background refresh
+  useEffect(() => {
+    fetchData(false);
+  }, [fetchData]);
+
   useEffect(() => {
     const interval = setInterval(() => fetchData(true), 120000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchData]);
 
   if (loading) {
     return (

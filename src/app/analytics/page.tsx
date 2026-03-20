@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
       } else {
         setError((prev) => ({ ...prev, technical: result.error || "Failed to fetch data" }));
       }
-    } catch (err) {
+    } catch {
       setError((prev) => ({ ...prev, technical: "Failed to fetch technical data" }));
     } finally {
       setLoading((prev) => ({ ...prev, technical: false }));
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
       } else {
         setError((prev) => ({ ...prev, futures: result.error || "Failed to fetch futures data" }));
       }
-    } catch (err) {
+    } catch {
       setError((prev) => ({ ...prev, futures: "Failed to fetch futures data" }));
     } finally {
       setLoading((prev) => ({ ...prev, futures: false }));
@@ -191,7 +191,7 @@ export default function AnalyticsPage() {
       } else {
         setError((prev) => ({ ...prev, whales: result.error || "Failed to fetch whale alerts" }));
       }
-    } catch (err) {
+    } catch {
       setError((prev) => ({ ...prev, whales: "Failed to fetch whale alerts" }));
     } finally {
       setLoading((prev) => ({ ...prev, whales: false }));

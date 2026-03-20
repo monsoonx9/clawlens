@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   AreaChart,
@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Loader2, AlertCircle, RefreshCw, TrendingUp, Activity } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, Activity } from "lucide-react";
 import { getSkill } from "@/skills";
 import { clsx } from "clsx";
 
@@ -30,50 +30,55 @@ function formatUSD(value: number): string {
   return `$${value.toFixed(6)}`;
 }
 
-export function TechnicalChart({ contractAddress }: { contractAddress?: string }) {
+export function TechnicalChart({
+  contractAddress: _contractAddress,
+}: {
+  contractAddress?: string;
+}) {
   const [data, setData] = useState<TechnicalChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [symbol, setSymbol] = useState("BTCUSDT");
   const [timeInterval, setTimeInterval] = useState("1h");
 
-  const fetchData = async (silent = false) => {
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const skill = getSkill("binance/technical-indicators");
-      if (!skill) {
-        if (!silent) setError("Skill not found");
-        return;
+  const fetchData = useCallback(
+    async (silent = false) => {
+      if (!silent) {
+        setLoading(true);
+        setError(null);
       }
-      const result = await skill.execute(
-        { symbol, interval: timeInterval, limit: 50, indicators: ["sma", "ema", "rsi"] },
-        { apiKeys: { binanceApiKey: "", binanceSecretKey: "" } },
-      );
-      if (result.success && result.data) {
-        setData(result.data as unknown as TechnicalChartData);
-      } else if (!silent) {
-        setError(result.error || "Failed to fetch");
+      try {
+        const skill = getSkill("binance/technical-indicators");
+        if (!skill) {
+          if (!silent) setError("Skill not found");
+          return;
+        }
+        const result = await skill.execute(
+          { symbol, interval: timeInterval, limit: 50, indicators: ["sma", "ema", "rsi"] },
+          { apiKeys: { binanceApiKey: "", binanceSecretKey: "" } },
+        );
+        if (result.success && result.data) {
+          setData(result.data as unknown as TechnicalChartData);
+        } else if (!silent) {
+          setError(result.error || "Failed to fetch");
+        }
+      } catch {
+        if (!silent) setError("Failed to fetch chart data");
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } catch {
-      if (!silent) setError("Failed to fetch chart data");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
+    },
+    [symbol, timeInterval],
+  );
 
-  // Initial load
   useEffect(() => {
     fetchData(false);
-  }, [symbol, timeInterval]);
+  }, [fetchData]);
 
-  // Silent background refresh
   useEffect(() => {
     const timer = setInterval(() => fetchData(true), 60000);
     return () => clearInterval(timer);
-  }, [symbol, timeInterval]);
+  }, [fetchData]);
 
   // Transform candle data for chart
   const chartData =

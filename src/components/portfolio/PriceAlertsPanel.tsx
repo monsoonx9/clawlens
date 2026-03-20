@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2,
@@ -33,6 +33,7 @@ function formatUSD(value: number): string {
 
 export function PriceAlertsPanel() {
   const apiKeys = useAppStore((s) => s.apiKeys);
+  const apiKeysRef = useRef(apiKeys);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +41,12 @@ export function PriceAlertsPanel() {
   const [newPrice, setNewPrice] = useState("");
   const [newCondition, setNewCondition] = useState<"above" | "below">("above");
 
-  const fetchAlerts = async () => {
+  useEffect(() => {
+    apiKeysRef.current = apiKeys;
+  }, [apiKeys]);
+
+  const fetchAlerts = useCallback(async () => {
+    const currentApiKeys = apiKeysRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -53,8 +59,8 @@ export function PriceAlertsPanel() {
         { action: "list" },
         {
           apiKeys: {
-            binanceApiKey: apiKeys?.binanceApiKey || "",
-            binanceSecretKey: apiKeys?.binanceSecretKey || "",
+            binanceApiKey: currentApiKeys?.binanceApiKey || "",
+            binanceSecretKey: currentApiKeys?.binanceSecretKey || "",
           },
         },
       );
@@ -69,7 +75,7 @@ export function PriceAlertsPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const createAlert = async () => {
     if (!newPrice) return;
@@ -118,7 +124,7 @@ export function PriceAlertsPanel() {
 
   useEffect(() => {
     fetchAlerts();
-  }, []);
+  }, [fetchAlerts]);
 
   const symbols = ["BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "AVAX"];
 

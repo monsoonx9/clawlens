@@ -2,16 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Users,
-  PieChart,
-  Clock,
-  Settings,
-  Zap,
-  BarChart3,
-  Bot,
-} from "lucide-react";
+import { LayoutDashboard, Users, PieChart, Settings, Zap, Bot } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 

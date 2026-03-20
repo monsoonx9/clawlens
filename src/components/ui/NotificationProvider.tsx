@@ -3,9 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import {
   Notification,
-  NotificationType,
   loadNotifications,
-  saveNotifications,
   addNotification as addNotif,
   markNotificationRead as markRead,
   markAllNotificationsRead as markAllRead,
@@ -77,7 +75,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const addNotification = useCallback(
     (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
-      const newNotif = addNotif(notification);
+      addNotif(notification);
       refreshNotifications();
     },
     [refreshNotifications],

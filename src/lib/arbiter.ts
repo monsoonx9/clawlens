@@ -2758,7 +2758,7 @@ Focus on: WHAT should the user DO?`;
       isComplete: true,
     };
     onArbitrateComplete(verdict);
-  } catch (error) {
+  } catch {
     onArbitrateComplete({
       consensus:
         "The council deliberated, but The Arbiter failed to synthesize a coherent final verdict.",

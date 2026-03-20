@@ -1,16 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import {
-  Loader2,
-  AlertCircle,
-  RefreshCw,
-  Shield,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-} from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, Shield, CheckCircle, XCircle } from "lucide-react";
 import { getSkill } from "@/skills";
 import { clsx } from "clsx";
 
@@ -50,19 +42,6 @@ function getRiskColor(level: string): string {
   }
 }
 
-function getRiskBgColor(level: string): string {
-  switch (level) {
-    case "LOW":
-      return "bg-risk-low/20";
-    case "MEDIUM":
-      return "bg-risk-moderate/20";
-    case "HIGH":
-      return "bg-risk-high/20";
-    default:
-      return "bg-text-muted/20";
-  }
-}
-
 export function RugRiskScore({
   contractAddress,
   chain = "bsc",
@@ -75,7 +54,7 @@ export function RugRiskScore({
   const [error, setError] = useState<string | null>(null);
   const [inputAddress, setInputAddress] = useState(contractAddress || "");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!inputAddress) return;
     setLoading(true);
     setError(null);
@@ -99,14 +78,14 @@ export function RugRiskScore({
     } finally {
       setLoading(false);
     }
-  };
+  }, [inputAddress, chain]);
 
   useEffect(() => {
     if (contractAddress) {
       setInputAddress(contractAddress);
       fetchData();
     }
-  }, [contractAddress]);
+  }, [contractAddress, fetchData]);
 
   const circumference = 2 * Math.PI * 45;
   const score = data?.riskScore ?? 0;

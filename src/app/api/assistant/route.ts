@@ -80,9 +80,16 @@ export async function POST(request: NextRequest) {
       content: m.content,
     }));
 
-    const skillInvocations = skillRouter.analyzeIntent(message);
+    // Get last invoked skills from session for follow-up detection
+    const lastInvokedSkills = await chatManager.getLastInvokedSkills(activeSessionId);
+
+    const skillInvocations = skillRouter.analyzeIntent(message, {
+      priorMessages,
+      lastInvokedSkills,
+    });
     let skillResults: string[] = [];
     let skillsUsed: string[] = [];
+    let failedSkills: string[] = [];
 
     if (skillInvocations.length > 0) {
       const skillContext = {
@@ -102,12 +109,25 @@ export async function POST(request: NextRequest) {
       const skillOutput = await skillRouter.executeSkills(skillInvocations, skillContext);
       skillResults = skillOutput.results.map((r) => r.summary || JSON.stringify(r.data, null, 2));
       skillsUsed = skillOutput.skillsUsed;
+      failedSkills = skillOutput.failedSkills;
+
+      // Update last invoked skills for future follow-ups
+      if (skillsUsed.length > 0) {
+        await chatManager.updateLastInvokedSkills(activeSessionId, sessionId, skillsUsed);
+      }
     }
 
+    const hasPortfolio = !!(apiKeys?.binanceApiKey && apiKeys?.binanceSecretKey);
     const systemPrompt = getPersonalAssistantSystemPrompt(personality, undefined, {
       hasPortfolio: !!(apiKeys?.binanceApiKey && apiKeys?.binanceSecretKey),
       hasApiKeys: !!apiKeys,
     });
+
+    // Build skill results context
+    let skillContextNote = "";
+    if (failedSkills.length > 0) {
+      skillContextNote = `\n\nNote: Some requested features could not be retrieved: ${failedSkills.join(", ")}. Please acknowledge this limitation in your response.`;
+    }
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -145,7 +165,7 @@ export async function POST(request: NextRequest) {
           if (skillResults.length > 0) {
             conversationHistory.splice(2, 0, {
               role: "system" as const,
-              content: `Relevant data from my tools:\n\n${skillResults.join("\n\n")}`,
+              content: `Relevant data from my tools:\n\n${skillResults.join("\n\n")}${skillContextNote}`,
             });
           }
 

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Council — ClawLens",
+  title: "The Multi-Agent Intelligence Council for Binance",
   description:
     "Ask the AI Council. Get multi-agent crypto analysis from 10 specialized AI agents + The Arbiter, synthesized into a unified verdict.",
 };

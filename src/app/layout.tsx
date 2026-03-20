@@ -16,11 +16,11 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://clawlens-beta.vercel.app"),
-  title: "ClawLens — Council AI",
+  title: "The Multi-Agent Intelligence Council for Binance",
   description: "Don't ask one AI. Ask the Council.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "ClawLens — Council AI",
+    title: "The Multi-Agent Intelligence Council for Binance",
     description: "Don't ask one AI. Ask the Council.",
     url: "https://clawlens-beta.vercel.app",
     siteName: "ClawLens",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ClawLens — Council AI",
+    title: "The Multi-Agent Intelligence Council for Binance",
     description: "Don't ask one AI. Ask the Council.",
     images: ["/logo_v1.webp"],
   },

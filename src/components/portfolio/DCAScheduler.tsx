@@ -148,7 +148,7 @@ export function DCAScheduler() {
       </div>
 
       <div className="flex-1 overflow-auto">
-        <div className="min-w-[350px]">
+        <div className="min-w-[280px] sm:min-w-[350px]">
           <table className="w-full text-[10px] sm:text-xs">
             <thead>
               <tr className="border-b border-card-border">

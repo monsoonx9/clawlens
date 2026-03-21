@@ -456,13 +456,13 @@ function ToggleSwitch({
       </div>
       <button
         onClick={() => onChange(!enabled)}
-        className={`relative w-11 h-6 rounded-full transition-colors ${
+        className={`relative w-11 h-6 min-w-[44px] min-h-[44px] flex items-center rounded-full transition-colors ${
           enabled ? "bg-[var(--color-accent)]" : "bg-[var(--color-card-border)]"
         }`}
       >
         <div
-          className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-            enabled ? "translate-x-6" : "translate-x-1"
+          className={`absolute left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+            enabled ? "translate-x-[22px]" : "translate-x-0"
           }`}
         />
       </button>

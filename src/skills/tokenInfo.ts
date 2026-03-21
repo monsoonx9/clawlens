@@ -65,7 +65,7 @@ export interface TokenInfoResult {
 export const tokenInfo: Skill = {
   id: "binance/query-token-info",
   name: "Token Info",
-  namespace: "claw-council",
+  namespace: "binance",
   version: "1.0.0",
   description:
     "Query token details by keyword, contract address, or chain. Search tokens, get metadata, retrieve real-time market data, and fetch K-line candlestick charts for technical analysis.",

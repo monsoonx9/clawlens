@@ -117,6 +117,14 @@ export class TelegramSkillService {
         return this.formatNews(data);
       case "binance/futures-data":
         return this.formatFuturesData(data);
+      case "claw-council/fear-index":
+        return this.formatFearIndex(data);
+      case "claw-council/dca-strategist":
+        return this.formatDCA(data);
+      case "binance/volume-analysis":
+        return this.formatVolumeAnalysis(data);
+      case "binance/order-book-analysis":
+        return this.formatOrderBook(data);
       default:
         return this.formatGeneric(data);
     }
@@ -302,7 +310,7 @@ export class TelegramSkillService {
     const openInterest = data.openInterest as number;
     const longShortRatio = data.longShortRatio as number;
 
-    let message = "📈 *Futures Data: ${symbol}*\n\n";
+    let message = `📈 *Futures Data: ${symbol}*\n\n`;
     message += `💰 *Funding Rate:* ${(fundingRate * 100).toFixed(4)}%\n`;
     message += `📊 *Open Interest:* $${(openInterest / 1000000).toFixed(2)}M\n`;
 
@@ -310,6 +318,78 @@ export class TelegramSkillService {
       const emoji = longShortRatio > 1 ? "🟢" : longShortRatio < 1 ? "🔴" : "⚪️";
       message += `${emoji} *Long/Short:* ${longShortRatio.toFixed(2)}\n`;
     }
+
+    return message;
+  }
+
+  private formatFearIndex(data: Record<string, unknown>): string {
+    const token = data.token as string;
+    const score = data.score as number;
+    const label = data.label as string;
+
+    let emoji = "⚪️";
+    if (score <= 25) emoji = "🔴";
+    else if (score <= 45) emoji = "🟡";
+    else if (score <= 55) emoji = "⚪️";
+    else emoji = "🟢";
+
+    let message = `${emoji} *Fear & Greed Index: ${token}*\n\n`;
+    message += `📊 *Score:* ${score}/100 (${label})\n`;
+
+    return message;
+  }
+
+  private formatDCA(data: Record<string, unknown>): string {
+    const targetAsset = (data.targetAsset as string) || "Unknown";
+    const totalBudgetUSD = data.totalBudgetUSD as number;
+    const currentPrice = data.currentPrice as number;
+    const scenarios = data.scenarios as
+      | {
+          bull?: { returnPercent: number };
+          bear?: { returnPercent: number };
+          crab?: { returnPercent: number };
+        }
+      | undefined;
+
+    if (!scenarios || !totalBudgetUSD || !currentPrice) {
+      return `📊 *DCA Strategist: ${targetAsset}*\n\n❌ Unable to generate DCA scenarios. Please try again.`;
+    }
+
+    let message = `📊 *DCA Strategist: ${targetAsset}*\n\n`;
+    message += `💰 *Budget:* $${totalBudgetUSD}\n`;
+    message += `💵 *Current Price:* $${currentPrice.toLocaleString()}\n\n`;
+    message += `*Scenarios:*\n`;
+    message += `  🟢 Bull: ${scenarios.bull && scenarios.bull.returnPercent >= 0 ? "+" : ""}${scenarios.bull?.returnPercent?.toFixed(1) ?? "N/A"}%\n`;
+    message += `  🔴 Bear: ${scenarios.bear && scenarios.bear.returnPercent >= 0 ? "+" : ""}${scenarios.bear?.returnPercent?.toFixed(1) ?? "N/A"}%\n`;
+    message += `  ⚪️ Crab: ${scenarios.crab && scenarios.crab.returnPercent >= 0 ? "+" : ""}${scenarios.crab?.returnPercent?.toFixed(1) ?? "N/A"}%\n`;
+
+    return message;
+  }
+
+  private formatVolumeAnalysis(data: Record<string, unknown>): string {
+    const symbol = data.symbol as string;
+    const volumeRatio = data.volumeRatio as number;
+    const buySellRatio = data.buySellRatio as number;
+
+    let emoji = "⚪️";
+    if (buySellRatio > 1.2) emoji = "🟢";
+    else if (buySellRatio < 0.8) emoji = "🔴";
+
+    let message = `📊 *Volume Analysis: ${symbol}*\n\n`;
+    message += `📈 *Volume Ratio:* ${volumeRatio.toFixed(2)}x\n`;
+    message += `${emoji} *Buy/Sell:* ${buySellRatio.toFixed(2)}\n`;
+
+    return message;
+  }
+
+  private formatOrderBook(data: Record<string, unknown>): string {
+    const symbol = data.symbol as string;
+    const spread = data.spread as number;
+    const bidAskRatio = data.bidAskRatio as number;
+
+    let message = `📊 *Order Book: ${symbol}*\n\n`;
+    message += `💰 *Spread:* $${spread.toFixed(2)}\n`;
+    message += `📈 *Bid/Ask:* ${bidAskRatio.toFixed(2)}\n`;
 
     return message;
   }

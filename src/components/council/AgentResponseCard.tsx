@@ -367,7 +367,7 @@ function SmoothStreamingText({ content, isStreaming }: { content: string; isStre
   }, [content, isStreaming]);
 
   return (
-    <span className="whitespace-pre-wrap">
+    <span className="whitespace-pre-wrap break-words">
       {displayedText}
       {isStreaming && !isComplete && (
         <motion.span

@@ -51,6 +51,7 @@ interface AppStoreActions {
   updateAgentResponse: (agentId: AgentName, updates: Partial<AgentResponse>) => void;
   setVerdict: (verdict: ArbitersVerdict) => void;
   finalizeSession: () => void;
+  saveToHistory: () => void;
   clearSessions: () => void;
   toggleAgent: (agentId: AgentName) => void;
   addToWatchlist: (token: WatchlistToken) => void;
@@ -361,6 +362,24 @@ export const useAppStore = create<FullStore>((set, get) => ({
       return {
         sessions: updatedSessions,
         activeSession: null,
+      };
+    });
+  },
+
+  saveToHistory: () => {
+    set((state) => {
+      if (!state.activeSession) return state;
+      // Add active session to history without clearing it
+      const updatedSessions = [state.activeSession, ...state.sessions];
+      // Persist sessions to localStorage (keep only last 50 to avoid storage bloat)
+      try {
+        const toStore = updatedSessions.slice(0, 50);
+        localStorage.setItem("clawlens_sessions", JSON.stringify(toStore));
+      } catch (e) {
+        console.error("Failed to persist session to history", e);
+      }
+      return {
+        sessions: updatedSessions,
       };
     });
   },

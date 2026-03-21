@@ -158,7 +158,7 @@ export function TradeJournal() {
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
         {stats.map((stat, idx) => (
           <motion.div
             key={stat.label}

@@ -36,7 +36,7 @@ export interface TradingSignalResult {
 export const tradingSignal: Skill = {
   id: "binance/trading-signal",
   name: "Trading Signal",
-  namespace: "claw-council",
+  namespace: "binance",
   version: "1.0.0",
   description:
     "Retrieve on-chain smart money trading signals. Monitor professional investor activities including buy/sell signals, trigger prices, current prices, max gains, and exit rates. Use to discover early trading opportunities.",

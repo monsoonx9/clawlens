@@ -39,7 +39,7 @@ export interface Skill {
   id: string;
   name: string;
   description: string;
-  namespace: "claw-council" | "binance";
+  namespace: "claw-council" | "binance" | "bsc" | "binance-square";
   version: string;
   inputSchema: Record<string, SkillParam>;
   execute: (input: Record<string, unknown>, context: SkillContext) => Promise<SkillResult>;

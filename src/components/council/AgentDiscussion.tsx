@@ -100,7 +100,7 @@ export function AgentDiscussion({
                     className="flex items-center"
                   >
                     <div
-                      className={`w-8 h-2 rounded-full transition-colors ${
+                      className={`w-10 sm:w-8 h-2 rounded-full transition-colors ${
                         idx < currentRound.currentRound
                           ? "bg-accent"
                           : idx === currentRound.currentRound - 1
@@ -127,14 +127,14 @@ export function AgentDiscussion({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex sm:-space-x-2">
                 {activeAgents.slice(0, 5).map((agent) => (
                   <motion.div
                     key={agent.id}
                     initial={{ scale: 0, x: -10 }}
                     animate={{ scale: 1, x: 0 }}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 border-bg"
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold border-2 border-bg shrink-0"
                     style={{
                       backgroundColor: `color-mix(in srgb, ${agent.color}, transparent 80%)`,
                       color: agent.color,
@@ -145,7 +145,7 @@ export function AgentDiscussion({
                   </motion.div>
                 ))}
                 {activeAgents.length > 5 && (
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium bg-card-border border-2 border-bg text-text-muted">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-medium bg-card-border border-2 border-bg text-text-muted shrink-0">
                     +{activeAgents.length - 5}
                   </div>
                 )}

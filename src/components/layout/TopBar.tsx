@@ -41,13 +41,15 @@ export function TopBar() {
       });
       const data = await res.json();
       if (data.success && data.data !== undefined) {
-        setPrevPrice(bnbPrice);
-        setBnbPrice(data.data);
+        setBnbPrice((prevPrice) => {
+          setPrevPrice(prevPrice);
+          return data.data;
+        });
       }
     } catch {
       // Silently fail — keep showing last known price
     }
-  }, [bnbPrice]);
+  }, []);
 
   const fetchBscBlock = useCallback(async () => {
     try {
@@ -66,16 +68,16 @@ export function TopBar() {
   }, []);
 
   useEffect(() => {
-    const delay = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       fetchPrice();
       fetchBscBlock();
     }, 0);
-    void delay; // Satisfy linter
     intervalRef.current = setInterval(fetchPrice, 60000);
     return () => {
+      clearTimeout(timeoutId);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [fetchBscBlock]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchPrice]);
 
   const priceUp = prevPrice !== null && bnbPrice !== null && bnbPrice >= prevPrice;
   const priceColor =

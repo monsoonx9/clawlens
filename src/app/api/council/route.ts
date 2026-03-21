@@ -60,6 +60,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const MAX_QUERY_LENGTH = 10000;
+    if (query.length > MAX_QUERY_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Query exceeds maximum length of ${MAX_QUERY_LENGTH} characters` }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     // Create SSE readable stream
     const stream = new ReadableStream({
       async start(controller) {

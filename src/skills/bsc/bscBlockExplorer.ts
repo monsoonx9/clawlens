@@ -4,7 +4,7 @@ import { getLatestBlock, getBlockByNumber, BSCNetwork } from "@/lib/bscClient";
 export const bscBlockExplorer: Skill = {
   id: "bsc/bsc-block-explorer",
   name: "BSC Block Explorer",
-  namespace: "claw-council",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Get the latest block or block by number on BSC (BNB Smart Chain). Returns block information including timestamp, transactions, gas used, and miner.",

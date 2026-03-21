@@ -29,7 +29,8 @@ const QUICK_PROMPTS = [
 export default function CouncilPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { activeSession, preferences, apiKeys, startNewSession, finalizeSession } = useAppStore();
+  const { activeSession, preferences, apiKeys, startNewSession, finalizeSession, saveToHistory } =
+    useAppStore();
   const { isLoading, error, startSession, abortSession } = useCouncilSession();
 
   const [query, setQuery] = useState("");
@@ -341,7 +342,7 @@ export default function CouncilPage() {
     <CouncilErrorBoundary>
       <div className="max-w-4xl mx-auto py-6 sm:py-10 px-4 sm:px-6 w-full animate-in slide-in-from-right-8 duration-500">
         {/* TOP BAR */}
-        <div className="flex justify-between items-center mb-6 sm:mb-8">
+        <div className="flex justify-between items-center gap-3 flex-wrap mb-6 sm:mb-8">
           <button
             onClick={() => {
               abortSession();
@@ -360,7 +361,7 @@ export default function CouncilPage() {
               abortSession();
               finalizeSession();
             }}
-            className="bg-text-primary text-amoled px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold hover:scale-105 active:scale-95 hover:bg-text-secondary hover:shadow-glow transition-all flex gap-2 items-center"
+            className="bg-text-primary text-amoled px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold hover:scale-105 active:scale-95 hover:bg-text-secondary hover:shadow-glow transition-all flex gap-2 items-center shrink-0"
           >
             New Query
           </button>
@@ -434,7 +435,7 @@ export default function CouncilPage() {
               onNewQuery={() => finalizeSession()}
               onSaveToHistory={() => {
                 if (activeSession.verdict?.isComplete) {
-                  // Already saved automatically by useCouncilSession or similar
+                  saveToHistory();
                 }
               }}
             />

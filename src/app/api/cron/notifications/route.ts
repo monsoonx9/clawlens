@@ -301,7 +301,12 @@ export async function GET(request: Request): Promise<NextResponse> {
   const cronSecret = request.headers.get("x-cron-secret");
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && cronSecret !== expectedSecret) {
+  if (!expectedSecret) {
+    console.error("[Cron] CRON_SECRET not configured - rejecting request");
+    return NextResponse.json({ error: "Cron authentication not configured" }, { status: 500 });
+  }
+
+  if (!cronSecret || cronSecret !== expectedSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

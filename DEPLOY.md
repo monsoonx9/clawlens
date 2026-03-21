@@ -12,17 +12,18 @@ This guide covers deploying ClawLens to production using Vercel.
 
 ClawLens requires the following environment variables:
 
-| Variable                        | Required | Description                                           |
-| ------------------------------- | -------- | ----------------------------------------------------- |
-| `UPSTASH_REDIS_REST_URL`        | Yes      | Upstash Redis REST URL                                |
-| `UPSTASH_REDIS_REST_TOKEN`      | Yes      | Upstash Redis REST Token                              |
-| `VAULT_SECRET`                  | Yes      | Secret key for encrypting API keys (min 32 chars)     |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase Project URL                                  |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase Publishable (Anon) Key                       |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Yes      | Supabase Legacy Service Role Key (for backend ops)    |
+| Variable                        | Required | Description                                               |
+| ------------------------------- | -------- | --------------------------------------------------------- |
+| `UPSTASH_REDIS_REST_URL`        | Yes      | Upstash Redis REST URL                                    |
+| `UPSTASH_REDIS_REST_TOKEN`      | Yes      | Upstash Redis REST Token                                  |
+| `VAULT_SECRET`                  | Yes      | Secret key for encrypting API keys (min 32 chars)         |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase Project URL                                      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase Publishable (Anon) Key                           |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Yes      | Supabase Legacy Service Role Key (for backend ops)        |
 | `NEXT_PUBLIC_APP_URL`           | No       | Production URL (e.g., `https://clawlens-beta.vercel.app`) |
-| `TELEGRAM_BOT_TOKEN`            | No       | Telegram Bot Token from @BotFather                    |
-| `TELEGRAM_WEBHOOK_SECRET`       | No       | Secret for Telegram webhook verification              |
+| `TELEGRAM_BOT_TOKEN`            | No       | Telegram Bot Token from @BotFather                        |
+| `TELEGRAM_WEBHOOK_SECRET`       | No       | Secret for Telegram webhook verification                  |
+| `CRON_SECRET`                   | No       | Secret for authenticating cron job requests               |
 
 ### Getting Upstash Credentials
 

@@ -56,7 +56,7 @@ function getRecommendation(
 export const tokenAudit: Skill = {
   id: "binance/query-token-audit",
   name: "Token Audit",
-  namespace: "claw-council",
+  namespace: "binance",
   version: "1.4.0",
   description:
     "Official Binance token security audit. Detects honeypots, scams, and malicious contracts. Returns risk level, trading taxes, and detailed security checks. Use before trading any token.",

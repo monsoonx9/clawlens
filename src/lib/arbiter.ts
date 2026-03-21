@@ -1,7 +1,6 @@
 import { AgentName, APIKeys, PortfolioSnapshot, UserPreferences, ArbitersVerdict } from "@/types";
-import { AGENT_CONFIGS, getSystemPrompt } from "@/agents/agentPrompts";
+import { getSystemPrompt } from "@/agents/agentPrompts";
 import {
-  callAgentOnce,
   streamAgentResponse,
   buildUserContext,
   getDefaultModel,
@@ -11,7 +10,7 @@ import { getSkill, SkillContext } from "@/skills";
 import { councilAnalyzer } from "@/skills/councilAnalyzer";
 import { consensusDetector } from "@/skills/consensusDetector";
 import { verdictSynthesizer } from "@/skills/verdictSynthesizer";
-import { getTicker24hr, BinanceTicker24hr } from "@/lib/binanceClient";
+import { getTicker24hr } from "@/lib/binanceClient";
 import { cryptoMarketRank } from "@/skills/cryptoMarketRank";
 import { memeRush } from "@/skills/memeRush";
 import { tokenAudit } from "@/skills/tokenAudit";
@@ -65,18 +64,11 @@ import {
   marketImpact,
   dcaBacktester,
   basisSpread,
+  patterns,
+  correlation,
+  regime,
 } from "@/skills/futures";
-import { LLMProvider } from "@/types";
-
-// Timeout helper for promise with specified timeout
-const withTimeout = <T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`${errorMsg} (timeout: ${ms}ms)`)), ms),
-    ),
-  ]);
-};
+import { institutionalFlow } from "@/skills/institutionalFlow";
 
 const CONSENSUS_THRESHOLD = 75;
 
@@ -294,20 +286,24 @@ export function isUltraSimpleQuery(query: string): { symbol: string } | null {
 // 3. Data Formatting Helpers
 // ---------------------------------------------------------------------------
 
-function formatTickerCompact(ticker: {
+interface TickerCompactData {
   symbol?: string;
-  lastPrice?: string;
-  priceChangePercent?: string;
-  quoteVolume?: number;
-  highPrice?: string;
-  lowPrice?: string;
-}): string {
-  const price = ticker.lastPrice || "N/A";
-  const change = ticker.priceChangePercent || "0";
-  const vol = ticker.quoteVolume ? `$${(ticker.quoteVolume / 1e9).toFixed(1)}B` : "N/A";
-  const high = ticker.highPrice || "N/A";
-  const low = ticker.lowPrice || "N/A";
-  return `${ticker.symbol}: $${price} (${change}%), Vol: ${vol}, 24h: $${low}-$${high}`;
+  lastPrice?: string | number;
+  priceChangePercent?: string | number;
+  quoteVolume?: string | number;
+  highPrice?: string | number;
+  lowPrice?: string | number;
+}
+
+function formatTickerCompact(ticker: TickerCompactData): string {
+  const price = ticker.lastPrice ? Number(ticker.lastPrice).toFixed(2) : "N/A";
+  const change = ticker.priceChangePercent
+    ? `${Number(ticker.priceChangePercent) >= 0 ? "+" : ""}${Number(ticker.priceChangePercent).toFixed(2)}%`
+    : "0%";
+  const vol = ticker.quoteVolume ? `$${(Number(ticker.quoteVolume) / 1e9).toFixed(1)}B` : "N/A";
+  const high = ticker.highPrice ? `$${Number(ticker.highPrice).toFixed(2)}` : "N/A";
+  const low = ticker.lowPrice ? `$${Number(ticker.lowPrice).toFixed(2)}` : "N/A";
+  return `$${price} (${change}%), Vol: ${vol}, 24h: ${low}-${high}`;
 }
 
 function formatTokenSummary(data: unknown): string {
@@ -385,13 +381,24 @@ export function routeQuery(query: string, enabledAgents: AgentName[]): AgentName
     ["SHADOW", "SCOUT", "LENS"].forEach((a) => selected.add(a as AgentName));
   }
 
-  // BSC/BNB Chain - Web3 & On-Chain Analysis
+  // Institutional Flow - Smart Money & Fund Analysis
   if (
-    /(bsc|binance smart chain|bnb chain|web3|nft|contract|token.*bnb|burn|sniper|token.*hold)/.test(
+    /(institutional|smart money flow|fund flow|bank money|accumulation signal|smart money zones|hedge fund)/.test(
       lower,
     )
   ) {
-    ["SHADOW", "THE_WARDEN", "LENS", "LEDGER"].forEach((a) => selected.add(a as AgentName));
+    ["SHADOW", "FUTURES", "SCOUT"].forEach((a) => selected.add(a as AgentName));
+  }
+
+  // BSC/BNB Chain - Consolidated Web3 & On-Chain Analysis
+  if (
+    /(bsc|binance smart chain|bnb chain|web3|on-chain|onchain|bsc.*token|bsc.*wallet|bsc.*nft|bsc.*swap|contract.*bnb|token.*bnb|burn.*bnb|wallet.*bsc)/.test(
+      lower,
+    )
+  ) {
+    ["BLAZE", "SHADOW", "THE_WARDEN", "LENS", "LEDGER"].forEach((a) =>
+      selected.add(a as AgentName),
+    );
   }
 
   // Trading History / Behavioral analysis
@@ -413,6 +420,15 @@ export function routeQuery(query: string, enabledAgents: AgentName[]): AgentName
     ["LEDGER", "SAGE"].forEach((a) => selected.add(a as AgentName));
   }
 
+  // Price Alerts & Notifications
+  if (
+    /(alert|notify|remind|when price|price reaches|trigger.*price|set.*notification|watch.*price)/.test(
+      lower,
+    )
+  ) {
+    ["LEDGER", "PULSE"].forEach((a) => selected.add(a as AgentName));
+  }
+
   // Chart/Technical analysis
   if (
     /(chart|rsi|macd|candle|technical|support|resistance|k-line|kline|volume profile|order book)/.test(
@@ -424,20 +440,20 @@ export function routeQuery(query: string, enabledAgents: AgentName[]): AgentName
 
   // Futures/Perpetual trading
   if (
-    /(futures|perpetual|perp|open interest|oi |funding|contango|backwardation|basis|long short ratio|taker pressure|long squeeze|liquidation)/.test(
+    /(futures|perpetual|perp|open interest|oi |funding|contango|backwardation|basis|long short ratio|taker pressure|long squeeze|liquidation|leverage)/.test(
       lower,
     )
   ) {
-    ["FUTURES", "LENS", "SHADOW"].forEach((a) => selected.add(a as AgentName));
+    ["FUTURES", "LENS", "SHADOW", "THE_WARDEN"].forEach((a) => selected.add(a as AgentName));
   }
 
-  // BSC/BNB Chain - Web3 & On-Chain Analysis (specialized)
+  // Trading Signals & Entry/Exit
   if (
-    /(bsc|binance smart chain|bnb chain|web3|nft.*bsc|contract.*bnb|burn.*bnb|sniper|token.*bnb|wallet.*bsc|bsc.*wallet)/.test(
+    /(signal|entry point|exit.*price|stop loss|take profit|tp |sl |entry price|target price|trade.*idea|buy signal|sell signal)/.test(
       lower,
     )
   ) {
-    ["BLAZE", "SHADOW", "THE_WARDEN"].forEach((a) => selected.add(a as AgentName));
+    ["SHADOW", "THE_WARDEN", "SCOUT"].forEach((a) => selected.add(a as AgentName));
   }
 
   // Sentiment/Narrative/News
@@ -447,9 +463,45 @@ export function routeQuery(query: string, enabledAgents: AgentName[]): AgentName
     ["PULSE", "SCOUT"].forEach((a) => selected.add(a as AgentName));
   }
 
-  // NFT-specific routing
-  if (/(nft|non-fungible|collection|opensea|blur|payload|x2y2)/.test(lower)) {
-    ["LEDGER", "LENS"].forEach((a) => selected.add(a as AgentName));
+  // Social/Posting - Binance Square
+  if (/(post|share|publish|binance square|tweet|broadcast|create post)/.test(lower)) {
+    ["SCOUT", "LEDGER", "SAGE"].forEach((a) => selected.add(a as AgentName));
+  }
+
+  // NFT-specific routing (expanded)
+  if (
+    /(nft|non-fungible|collection|opensea|blur|payload|x2y2|nft.*trend|nft.*sale|nft.*volume)/.test(
+      lower,
+    )
+  ) {
+    ["LEDGER", "LENS", "SHADOW", "PULSE"].forEach((a) => selected.add(a as AgentName));
+  }
+
+  // DeFi/Yield/Staking
+  if (
+    /(defi|yield|farm|staking|lending|borrow|compound| liquidity |liquidity pool|lp |amm|dex.*trading|pancakeswap|uniswap)/.test(
+      lower,
+    )
+  ) {
+    ["BLAZE", "SHADOW", "THE_WARDEN", "LEDGER"].forEach((a) => selected.add(a as AgentName));
+  }
+
+  // Market Metrics/Capitalization
+  if (
+    /(market cap|marketcap|fdv|fully diluted|circulating supply|total supply|token.*supply|ranking.*token|top.*by.*volume)/.test(
+      lower,
+    )
+  ) {
+    ["SCOUT", "LENS", "PULSE"].forEach((a) => selected.add(a as AgentName));
+  }
+
+  // Wallet Clustering
+  if (
+    /(wallet cluster|related wallets|coordinated wallet|same.*wallet|group.*wallet|linked wallet|cluster.*analysis)/.test(
+      lower,
+    )
+  ) {
+    ["SHADOW", "BLAZE"].forEach((a) => selected.add(a as AgentName));
   }
 
   // Fear/Greed
@@ -642,6 +694,20 @@ export async function fetchSkillData(
           data += `\n\n[SKILL DATA: PRICE ALERTS]\n${alertsResult.success ? JSON.stringify(alertsResult.data, null, 2) : alertsResult.summary}`;
         }
 
+        // If user asked about backtesting or historical DCA performance
+        if (/(backtest|historical.*dca|dca.*performance|test.*dca)/.test(query.toLowerCase())) {
+          const backtestResult = await dcaBacktester.execute(
+            {
+              symbol: targetSymbol + "USDT",
+              amount_per_interval: 100,
+              interval_days: 7,
+              total_days: 365,
+            },
+            context,
+          );
+          data += `\n\n[SKILL DATA: DCA BACKTESTER]\n${backtestResult.success ? JSON.stringify(backtestResult.data, null, 2) : backtestResult.summary}`;
+        }
+
         return data;
       }
 
@@ -708,9 +774,12 @@ export async function fetchSkillData(
 
             const targetSymbol = symbol || "BTC";
 
-            // Get market data
+            // Get market data with timeout protection
             try {
-              const tickerResult = await getTicker24hr(targetSymbol + "USDT");
+              const tickerResult = await withSkillTimeout(
+                getTicker24hr(targetSymbol + "USDT"),
+                "getTicker24hr-PULSE",
+              );
               if (tickerResult.success && tickerResult.data && !Array.isArray(tickerResult.data)) {
                 priceChange24h = tickerResult.data.priceChangePercent;
               }
@@ -1216,16 +1285,15 @@ export async function fetchSkillData(
           // Get market data to supplement signals
           let marketContext = "";
           try {
-            const tickerResult = await getTicker24hr("BTCUSDT");
+            const tickerResult = await withSkillTimeout(
+              getTicker24hr("BTCUSDT"),
+              "getTicker24hr-SHADOW",
+            );
             if (tickerResult.success && tickerResult.data && !Array.isArray(tickerResult.data)) {
-              marketContext = `\n\n[CONTEXT: BTC Price]\n${JSON.stringify(
-                {
-                  price: tickerResult.data.lastPrice,
-                  change24h: tickerResult.data.priceChangePercent,
-                },
-                null,
-                2,
-              )}`;
+              marketContext = `\n\n[CONTEXT: BTC Price]\n${formatTokenSummary({
+                price: tickerResult.data.lastPrice,
+                change24h: tickerResult.data.priceChangePercent,
+              })}`;
             }
           } catch {
             // ignore
@@ -1355,12 +1423,44 @@ export async function fetchSkillData(
           );
         }
 
+        // Institutional flow analysis for smart money insights
+        if (
+          /(institution|smart money|funding rate|open interest|taker|accumulation)/.test(
+            query.toLowerCase(),
+          )
+        ) {
+          skillsToRun.push(
+            (async () => {
+              try {
+                const result = await institutionalFlow.execute(
+                  { symbol: symbol ? symbol + "USDT" : undefined },
+                  context,
+                );
+                return {
+                  key: "INSTITUTIONAL_FLOW",
+                  data: result.success ? result.data : {},
+                  summary: result.summary,
+                };
+              } catch (e) {
+                return {
+                  key: "INSTITUTIONAL_FLOW",
+                  data: {},
+                  summary: e instanceof Error ? e.message : "Error",
+                };
+              }
+            })(),
+          );
+        }
+
         // 24hr ticker if symbol detected
         if (symbol) {
           skillsToRun.push(
             (async () => {
               try {
-                const tickerResult = await getTicker24hr(symbol + "USDT");
+                const tickerResult = await withSkillTimeout(
+                  getTicker24hr(symbol + "USDT"),
+                  "getTicker24hr-SCOUT",
+                );
                 if (
                   !tickerResult.success ||
                   !tickerResult.data ||
@@ -1383,6 +1483,14 @@ export async function fetchSkillData(
                     highPrice24h: ticker.highPrice,
                     lowPrice24h: ticker.lowPrice,
                     tradeCount24h: ticker.count,
+                    formattedPrice: formatTickerCompact({
+                      symbol: ticker.symbol,
+                      lastPrice: ticker.lastPrice,
+                      priceChangePercent: ticker.priceChangePercent,
+                      quoteVolume: ticker.quoteVolume,
+                      highPrice: ticker.highPrice,
+                      lowPrice: ticker.lowPrice,
+                    }),
                   },
                 };
               } catch (e) {
@@ -1683,7 +1791,10 @@ export async function fetchSkillData(
           skillsToRun.push(
             (async () => {
               try {
-                const tickerResult = await getTicker24hr(symbol + "USDT");
+                const tickerResult = await withSkillTimeout(
+                  getTicker24hr(symbol + "USDT"),
+                  "getTicker24hr-LENS",
+                );
                 if (
                   !tickerResult.success ||
                   !tickerResult.data ||
@@ -1691,7 +1802,19 @@ export async function fetchSkillData(
                 ) {
                   throw new Error("Failed to fetch ticker");
                 }
-                return { key: "TOKEN_INTELLIGENCE", data: tickerResult.data };
+                const ticker = tickerResult.data;
+                return {
+                  key: "TOKEN_INTELLIGENCE",
+                  data: ticker,
+                  formatted: formatTickerCompact({
+                    symbol: ticker.symbol,
+                    lastPrice: ticker.lastPrice,
+                    priceChangePercent: ticker.priceChangePercent,
+                    quoteVolume: ticker.quoteVolume,
+                    highPrice: ticker.highPrice,
+                    lowPrice: ticker.lowPrice,
+                  }),
+                };
               } catch (e) {
                 return {
                   key: "TOKEN_INTELLIGENCE",
@@ -1899,6 +2022,151 @@ export async function fetchSkillData(
           })(),
         );
 
+        futuresSkills.push(
+          (async () => {
+            try {
+              const result = await fundingExtremes.execute({ symbols: [targetSymbol] }, context);
+              return {
+                key: "FUNDING_EXTREMES",
+                data: result.success ? result.data : {},
+                summary: result.summary,
+              };
+            } catch (e) {
+              return {
+                key: "FUNDING_EXTREMES",
+                data: {},
+                summary: e instanceof Error ? e.message : "Error",
+              };
+            }
+          })(),
+        );
+
+        futuresSkills.push(
+          (async () => {
+            try {
+              const result = await fundingHistory.execute(
+                { symbol: targetSymbol + "USDT", limit: 30 },
+                context,
+              );
+              return {
+                key: "FUNDING_HISTORY",
+                data: result.success ? result.data : {},
+                summary: result.summary,
+              };
+            } catch (e) {
+              return {
+                key: "FUNDING_HISTORY",
+                data: {},
+                summary: e instanceof Error ? e.message : "Error",
+              };
+            }
+          })(),
+        );
+
+        futuresSkills.push(
+          (async () => {
+            try {
+              const result = await smartAccumulation.execute({ symbols: [targetSymbol] }, context);
+              return {
+                key: "SMART_ACCUMULATION",
+                data: result.success ? result.data : {},
+                summary: result.summary,
+              };
+            } catch (e) {
+              return {
+                key: "SMART_ACCUMULATION",
+                data: {},
+                summary: e instanceof Error ? e.message : "Error",
+              };
+            }
+          })(),
+        );
+
+        futuresSkills.push(
+          (async () => {
+            try {
+              const result = await marketImpact.execute(
+                { symbol: targetSymbol + "USDT", side: "both", amount_usd: 100000 },
+                context,
+              );
+              return {
+                key: "MARKET_IMPACT",
+                data: result.success ? result.data : {},
+                summary: result.summary,
+              };
+            } catch (e) {
+              return {
+                key: "MARKET_IMPACT",
+                data: {},
+                summary: e instanceof Error ? e.message : "Error",
+              };
+            }
+          })(),
+        );
+
+        futuresSkills.push(
+          (async () => {
+            try {
+              const result = await patterns.execute(
+                { symbols: [targetSymbol], interval: "4h", limit: 50 },
+                context,
+              );
+              return {
+                key: "CANDLESTICK_PATTERNS",
+                data: result.success ? result.data : {},
+                summary: result.summary,
+              };
+            } catch (e) {
+              return {
+                key: "CANDLESTICK_PATTERNS",
+                data: {},
+                summary: e instanceof Error ? e.message : "Error",
+              };
+            }
+          })(),
+        );
+
+        futuresSkills.push(
+          (async () => {
+            try {
+              const result = await correlation.execute(
+                { symbols: [targetSymbol, "BTC", "ETH", "BNB"], interval: "1h", limit: 100 },
+                context,
+              );
+              return {
+                key: "CORRELATION_MATRIX",
+                data: result.success ? result.data : {},
+                summary: result.summary,
+              };
+            } catch (e) {
+              return {
+                key: "CORRELATION_MATRIX",
+                data: {},
+                summary: e instanceof Error ? e.message : "Error",
+              };
+            }
+          })(),
+        );
+
+        futuresSkills.push(
+          (async () => {
+            try {
+              const result = await regime.execute({ symbols: [targetSymbol] }, context);
+              return {
+                key: "MARKET_REGIME",
+                data: result.success ? result.data : {},
+                summary: result.summary,
+              };
+            } catch (e) {
+              return {
+                key: "MARKET_REGIME",
+                data: {},
+                summary: e instanceof Error ? e.message : "Error",
+              };
+            }
+          })(),
+        );
+
         const results = await Promise.allSettled(futuresSkills);
         let data = "";
 
@@ -1979,6 +2247,50 @@ export async function fetchSkillData(
               } catch (e) {
                 return {
                   key: "SNIPER_DETECTOR",
+                  data: {},
+                  summary: e instanceof Error ? e.message : "Error",
+                };
+              }
+            })(),
+          );
+
+          blazeSkills.push(
+            (async () => {
+              try {
+                const result = await bscTransactionAnalyzer.execute(
+                  { txHash: address, network: "bsc" },
+                  context,
+                );
+                return {
+                  key: "BSC_TRANSACTION_ANALYZER",
+                  data: result.success ? result.data : {},
+                  summary: result.summary,
+                };
+              } catch (e) {
+                return {
+                  key: "BSC_TRANSACTION_ANALYZER",
+                  data: {},
+                  summary: e instanceof Error ? e.message : "Error",
+                };
+              }
+            })(),
+          );
+
+          blazeSkills.push(
+            (async () => {
+              try {
+                const result = await bscBlockExplorer.execute(
+                  { blockNumber: undefined, network: "bsc" },
+                  context,
+                );
+                return {
+                  key: "BSC_BLOCK_EXPLORER",
+                  data: result.success ? result.data : {},
+                  summary: result.summary,
+                };
+              } catch (e) {
+                return {
+                  key: "BSC_BLOCK_EXPLORER",
                   data: {},
                   summary: e instanceof Error ? e.message : "Error",
                 };
@@ -2173,14 +2485,23 @@ export async function runCouncilDebate(params: RunCouncilDebateParams): Promise<
   const ultraSimple = isUltraSimpleQuery(query);
   if (ultraSimple) {
     try {
-      const tickerResult = await getTicker24hr(ultraSimple.symbol + "USDT");
+      const tickerResult = await withSkillTimeout(
+        getTicker24hr(ultraSimple.symbol + "USDT"),
+        "getTicker24hr",
+      );
       if (tickerResult.success && tickerResult.data && !Array.isArray(tickerResult.data)) {
         const ticker = tickerResult.data;
-        const price = Number(ticker.lastPrice).toFixed(2);
-        const change = ticker.priceChangePercent;
-        const vol = (Number(ticker.quoteVolume) / 1e9).toFixed(1);
+        // Use the formatTickerCompact helper for consistent formatting
+        const formattedTicker = formatTickerCompact({
+          symbol: ultraSimple.symbol,
+          lastPrice: ticker.lastPrice,
+          priceChangePercent: ticker.priceChangePercent,
+          quoteVolume: ticker.quoteVolume,
+          highPrice: ticker.highPrice,
+          lowPrice: ticker.lowPrice,
+        });
 
-        const directAnswer = `${ultraSimple.symbol} is currently $${price} (${change}%). 24h volume: $${vol}B. High: $${ticker.highPrice}, Low: $${ticker.lowPrice}`;
+        const directAnswer = `${ultraSimple.symbol}: ${formattedTicker}`;
 
         // Return as single agent response
         onAgentStart("SCOUT", 1, 1);
@@ -2388,7 +2709,6 @@ export async function runCouncilDebate(params: RunCouncilDebateParams): Promise<
   ): Promise<{ fullResponse: string; councilReport: string } | null> => {
     if (params.signal?.aborted) return null;
 
-    const roundLabel = totalRounds > 1 ? `Round ${round}/${totalRounds}` : "";
     onAgentStart(agentId, round, totalRounds);
 
     try {
@@ -2493,7 +2813,6 @@ Focus on: WHAT should the user DO?`;
   let MAX_ROUNDS = dynamicMaxRounds;
   const collectedReports: string[] = [];
   const skillDataCache = new Map<string, string>();
-  const previousRoundReports = new Map<number, string[]>();
 
   const countQueryTopics = (q: string): number => {
     const topicKeywords = [
@@ -2596,11 +2915,6 @@ Focus on: WHAT should the user DO?`;
       if (result.status === "fulfilled" && result.value) {
         const agentId = relevantAgents[index];
         collectedReports.push(`[Round ${round}] ${agentId}: ${result.value.councilReport}`);
-
-        // Store round reports for next round context
-        const currentRound = previousRoundReports.get(round) || [];
-        currentRound.push(result.value.councilReport);
-        previousRoundReports.set(round, currentRound);
       }
     });
 
@@ -2751,12 +3065,30 @@ Focus on: WHAT should the user DO?`;
     // Clean up markdown wrapping if present
     const cleanedResponse = accumulatedResponse.replace(/```json\n?|\n?```/g, "").trim();
 
-    const parsed: Omit<ArbitersVerdict, "isStreaming" | "isComplete"> = JSON.parse(cleanedResponse);
-    const verdict: ArbitersVerdict = {
-      ...parsed,
-      isStreaming: false,
-      isComplete: true,
-    };
+    let verdict: ArbitersVerdict;
+    try {
+      const parsed: Omit<ArbitersVerdict, "isStreaming" | "isComplete"> =
+        JSON.parse(cleanedResponse);
+      verdict = {
+        ...parsed,
+        isStreaming: false,
+        isComplete: true,
+      };
+    } catch (parseError) {
+      console.error("[Arbiter] Failed to parse verdict JSON:", parseError);
+      verdict = {
+        consensus:
+          "The council deliberated, but The Arbiter failed to synthesize a coherent final verdict.",
+        dissentingVoices: [],
+        riskLevel: "MODERATE",
+        finalVerdict:
+          "Synthesis failed. Please try rephrasing your query. Verify your API keys are correct.",
+        confidence: 0,
+        watchThis: "Exercise caution and do your own research.",
+        isStreaming: false,
+        isComplete: true,
+      };
+    }
     onArbitrateComplete(verdict);
   } catch {
     onArbitrateComplete({

@@ -57,13 +57,11 @@ async function setupBotCommands(bot: UserTelegramClient): Promise<void> {
 
 async function findBotConfigBySecret(
   secret: string,
-  sessionId?: string,
+  sessionId: string,
 ): Promise<TelegramBotConfig | null> {
-  if (sessionId) {
-    const config = await getTelegramBot(sessionId);
-    if (config && config.webhookSecret === secret) {
-      return config;
-    }
+  const config = await getTelegramBot(sessionId);
+  if (config && config.webhookSecret === secret) {
+    return config;
   }
 
   const { getRedis } = await import("@/lib/cache");
@@ -124,11 +122,12 @@ interface TelegramCallbackQuery {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ webhookSecret: string }> },
+  { params }: { params: Promise<{ webhookSecret: string; sessionId: string }> },
 ) {
   try {
     const resolvedParams = await params;
     const webhookSecret = resolvedParams.webhookSecret;
+    const sessionId = resolvedParams.sessionId;
 
     const secretToken = request.headers.get("x-telegram-bot-api-secret-token");
 
@@ -138,10 +137,10 @@ export async function POST(
 
     const body = await request.json();
 
-    const botConfig = await findBotConfigBySecret(webhookSecret);
+    const botConfig = await findBotConfigBySecret(webhookSecret, sessionId);
 
     if (!botConfig) {
-      console.error("[Dynamic Webhook] Bot config not found");
+      console.error("[Dynamic Webhook] Bot config not found for session:", sessionId);
       return new Response("Bot not found", { status: 404 });
     }
 
@@ -173,7 +172,7 @@ export async function POST(
 
 export async function GET(
   _request: NextRequest,
-  _context: { params: Promise<{ webhookSecret: string }> },
+  _context: { params: Promise<{ webhookSecret: string; sessionId: string }> },
 ) {
   return new Response("Telegram Webhook is running", { status: 200 });
 }
@@ -340,38 +339,47 @@ async function handleCommand(
       if (!args.trim()) {
         await bot.sendMessage(
           chatId,
-          "🔗 *Link Your Account*\n\nSend /link followed by your code.\n\nGet your code from the ClawLens dashboard in Settings → Telegram Bot.",
+          "🔗 *Link Your Account*\n\nSend /link followed by your code.\nGet your code from the ClawLens dashboard in Settings → Telegram Bot.",
           getMainKeyboard(),
         );
         break;
       }
 
-      const { validateLinkCode, deleteLinkCode } = await import("@/lib/keyVault");
-      const code = args.trim().toUpperCase();
-      const validSessionId = await validateLinkCode(code);
+      const { validateLinkCodeForSession } = await import("@/lib/keyVault");
+      const validationResult = await validateLinkCodeForSession(
+        args.trim().toUpperCase(),
+        sessionId,
+      );
 
-      if (!validSessionId) {
-        await bot.sendMessage(
-          chatId,
-          "❌ Invalid or expired link code.\n\nPlease get a new code from Settings → Telegram Bot.",
-          getMainKeyboard(),
-        );
+      if (!validationResult.valid) {
+        if (validationResult.expired) {
+          await bot.sendMessage(
+            chatId,
+            "❌ This link code has expired.\nPlease get a new code from Settings → Telegram Bot.",
+            getMainKeyboard(),
+          );
+        } else {
+          await bot.sendMessage(
+            chatId,
+            "❌ Invalid link code.\nThis code was generated for a different bot.\nPlease use the code from your current bot's Settings page.",
+            getMainKeyboard(),
+          );
+        }
         break;
       }
 
       const linked = await autoLinkUser(
         chatId,
         telegramUserId,
-        validSessionId,
+        validationResult.sessionId!,
         username,
         firstName,
       );
 
       if (linked) {
-        await deleteLinkCode(code);
         await bot.sendMessage(
           chatId,
-          "✅ *Account Linked!*\n\nYour Telegram is now connected to your ClawLens account.\n\nYou can now access all features including portfolio, alerts, and chat with AI!",
+          "✅ *Account Linked!*\n\nYour Telegram is now connected to your ClawLens account.\nYou can now access all features including portfolio, alerts, and chat with AI!",
           getMainKeyboard(),
         );
       } else {

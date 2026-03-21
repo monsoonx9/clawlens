@@ -68,7 +68,7 @@ async function analyzeCluster(
 export const walletCluster: Skill = {
   id: "bsc/wallet-cluster",
   name: "Wallet Cluster",
-  namespace: "binance",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Identifies wallet clusters by analyzing transaction patterns, token holdings, and behavioral signatures. Helps detect coordinated wallets and whale clusters.",

@@ -49,7 +49,7 @@ async function getBurnHistory(
 export const burnTracker: Skill = {
   id: "bsc/burn-tracker",
   name: "Burn Tracker",
-  namespace: "binance",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Tracks token burn events on BSC. Shows total burned, burn frequency, burn types, and burn rate. Useful for analyzing tokenomics and deflationary mechanics.",

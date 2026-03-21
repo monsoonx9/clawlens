@@ -119,7 +119,7 @@ export interface BSCWalletResult {
 export const bscWalletTracker: Skill = {
   id: "bsc/bsc-wallet-tracker",
   name: "BSC Wallet Tracker",
-  namespace: "claw-council",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Query any BSC (BNB Smart Chain) wallet address to retrieve native BNB balance and ERC20 token balances. Automatically checks top 20 popular tokens.",

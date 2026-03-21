@@ -4,7 +4,7 @@ import { getTransaction, BSCNetwork } from "@/lib/bscClient";
 export const bscTransactionAnalyzer: Skill = {
   id: "bsc/bsc-transaction-analyzer",
   name: "BSC Transaction Analyzer",
-  namespace: "claw-council",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Get detailed information about any BSC (BNB Smart Chain) transaction including sender, recipient, value, gas used, and transaction status.",

@@ -600,7 +600,7 @@ export default function PortfolioPage() {
             </div>
 
             {/* Scenario Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {(["bull", "bear", "crab"] as const).map((scenario) => {
                 const scenarioData =
                   (dcaResult.scenarios as Record<
@@ -638,10 +638,10 @@ export default function PortfolioPage() {
                           ? "🔴 Bear"
                           : "🟡 Crab"}
                     </div>
-                    <div className="text-text-primary font-semibold">
+                    <div className="text-text-primary font-semibold text-sm sm:text-base">
                       ${data?.projectedValue?.toFixed(2) || "0.00"}
                     </div>
-                    <div className="text-text-muted text-xs">
+                    <div className="text-text-muted text-[10px] sm:text-xs">
                       Avg cost: ${data?.avgCostBasis?.toFixed(2) || "0.00"}
                     </div>
                     <div

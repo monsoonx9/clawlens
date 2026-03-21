@@ -4,7 +4,7 @@ import { getNFTInfo, BSCNetwork } from "@/lib/bscClient";
 export const bscNftPortfolio: Skill = {
   id: "bsc/bsc-nft-portfolio",
   name: "BSC NFT Portfolio",
-  namespace: "claw-council",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Get information about any NFT (ERC721) on BSC (BNB Smart Chain) including token URI, metadata location, and current owner.",

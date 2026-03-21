@@ -1,6 +1,7 @@
 import { Skill, SkillContext, SkillResult } from "./types";
 
-const BASE_URL = "https://www.binance.com";
+const SQUARE_ENDPOINT = "/bapi/composite/v1/public/pgc/openApi/content/add";
+const SQUARE_BASE_URL = "www.binance.com";
 
 const ERROR_MESSAGES: Record<string, string> = {
   "10004": "Network error. Please try again",
@@ -31,20 +32,33 @@ interface SquarePostResult {
   code?: string;
 }
 
-async function squarePostRequest(content: string, apiKey: string): Promise<SquarePostResult> {
-  const url = `${BASE_URL}/bapi/composite/v1/public/pgc/openApi/content/add`;
-
-  const response = await fetch(url, {
+async function squarePostRequest(
+  content: string,
+  apiKey: string,
+  sessionId?: string,
+): Promise<SquarePostResult> {
+  const proxyResponse = await fetch("/api/binance/proxy", {
     method: "POST",
+    credentials: "include",
     headers: {
-      "X-Square-OpenAPI-Key": apiKey,
       "Content-Type": "application/json",
-      clienttype: "binanceSkill",
+      ...(sessionId ? { "x-session-id": sessionId } : {}),
     },
-    body: JSON.stringify({ bodyTextOnly: content }),
+    body: JSON.stringify({
+      endpoint: SQUARE_ENDPOINT,
+      baseUrl: SQUARE_BASE_URL,
+      method: "POST",
+      customHeaders: {
+        "X-Square-OpenAPI-Key": apiKey,
+        clienttype: "binanceSkill",
+      },
+      params: {
+        bodyTextOnly: content,
+      },
+    }),
   });
 
-  const data = await response.json();
+  const data = await proxyResponse.json();
 
   if (data.code === "000000") {
     const postId = data.data?.id;
@@ -67,8 +81,8 @@ async function squarePostRequest(content: string, apiKey: string): Promise<Squar
 export const squarePost: Skill = {
   id: "binance-square/square-post",
   name: "Square Post",
-  namespace: "binance",
-  version: "1.1",
+  namespace: "binance-square",
+  version: "1.2",
   description:
     'Post text content to Binance Square. Auto-run on messages like "post to square", "square post". Supports pure text posts with #hashtags.',
   inputSchema: {
@@ -134,15 +148,18 @@ export const squarePost: Skill = {
       }
 
       return {
-        success: true,
-        data: { status: "unavailable", message: result.error || "Failed to post to Square" },
-        summary: result.error || "Failed to post to Square. Check your API keys.",
+        success: false,
+        data: { error: result.error || "Failed to post to Square" },
+        summary:
+          result.error ||
+          "Failed to post to Square. Please check your Square API key and try again.",
       };
     } catch (error) {
+      console.error("[SquarePost] Error posting to Square:", error);
       return {
-        success: true,
-        data: { status: "unavailable", message: "Error posting to Square" },
-        summary: `Error posting to Square: ${error instanceof Error ? error.message : "Unknown error"}. Check your API keys.`,
+        success: false,
+        data: { error: "Network error posting to Square" },
+        summary: `Error posting to Square: ${error instanceof Error ? error.message : "Unknown error"}. Please check your API keys and try again.`,
       };
     }
   },

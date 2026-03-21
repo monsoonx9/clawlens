@@ -116,7 +116,10 @@ export function useCouncilSession() {
 
   const { trackEvent } = useAnalytics();
   const trackEventRef = useRef(trackEvent);
-  trackEventRef.current = trackEvent;
+
+  useEffect(() => {
+    trackEventRef.current = trackEvent;
+  }, [trackEvent]);
 
   const refreshPortfolio = useCallback(async () => {
     if (!apiKeys?.binanceApiKey || !apiKeys?.binanceSecretKey) {
@@ -170,6 +173,126 @@ export function useCouncilSession() {
     };
   }, []);
 
+  const handleEvent = useCallback(
+    (event: SSEEvent) => {
+      switch (event.type) {
+        case "agent_start": {
+          const newResponse: AgentResponse = {
+            agentId: event.agentId,
+            content: "",
+            councilReport: "",
+            isStreaming: true,
+            isComplete: false,
+            timestamp: new Date(),
+            currentIndex: event.current,
+            totalAgents: event.total,
+          };
+          addAgentResponse(newResponse);
+          break;
+        }
+
+        case "agent_chunk": {
+          const state = useAppStore.getState();
+          const existing = state.activeSession?.agentResponses.find(
+            (r) => r.agentId === event.agentId,
+          );
+          if (existing) {
+            updateAgentResponse(event.agentId, {
+              content: existing.content + event.chunk,
+            });
+          }
+          break;
+        }
+
+        case "agent_complete": {
+          updateAgentResponse(event.agentId, {
+            content: event.fullResponse,
+            councilReport: event.councilReport,
+            isStreaming: false,
+            isComplete: true,
+          });
+          break;
+        }
+
+        case "agent_error": {
+          updateAgentResponse(event.agentId, {
+            error: event.error,
+            isStreaming: false,
+            isComplete: true,
+          });
+          break;
+        }
+
+        case "arbiter_start": {
+          break;
+        }
+
+        case "arbiter_chunk": {
+          updateArbiterStream(event.chunk);
+          break;
+        }
+
+        case "arbiter_complete": {
+          const verdict: ArbitersVerdict = {
+            ...event.verdict,
+            isStreaming: false,
+            isComplete: true,
+          };
+          setVerdict(verdict);
+          break;
+        }
+
+        case "round_start": {
+          updateRoundProgress({
+            currentRound: event.round,
+            maxRounds: event.maxRounds,
+            reportsCount: 0,
+          });
+          break;
+        }
+
+        case "round_complete": {
+          updateRoundProgress({
+            currentRound: event.round,
+            maxRounds: event.maxRounds,
+            reportsCount: event.reportsCount,
+          });
+          break;
+        }
+
+        case "consensus_check": {
+          updateConsensus({
+            hasConsensus: event.hasConsensus,
+            agreement: event.agreement,
+            direction: event.direction,
+          });
+          break;
+        }
+
+        case "error": {
+          setError(event.message);
+          finalizeSession();
+          break;
+        }
+
+        case "done": {
+          trackEventRef.current("session_complete");
+          break;
+        }
+      }
+    },
+    [
+      addAgentResponse,
+      updateAgentResponse,
+      setVerdict,
+      updateArbiterStream,
+      finalizeSession,
+      updateRoundProgress,
+      updateConsensus,
+      setError,
+    ],
+  );
+
   const startSession = useCallback(
     async (query: string) => {
       if (!apiKeys) {
@@ -190,7 +313,7 @@ export function useCouncilSession() {
 
       // Start a new session in the store
       startNewSession(query);
-      trackEvent("council_query", { query: query.slice(0, 100) });
+      trackEventRef.current("council_query", { query: query.slice(0, 100) });
 
       try {
         const response = await fetch("/api/council", {
@@ -292,137 +415,10 @@ export function useCouncilSession() {
       portfolio,
       preferences,
       startNewSession,
-      addAgentResponse,
-      updateAgentResponse,
-      setVerdict,
-      updateArbiterStream,
-      finalizeSession,
       refreshPortfolio,
       setPortfolio,
       setIsPortfolioRefreshing,
-      updateRoundProgress,
-      updateConsensus,
-    ],
-  );
-
-  const handleEvent = useCallback(
-    (event: SSEEvent) => {
-      switch (event.type) {
-        case "agent_start": {
-          const newResponse: AgentResponse = {
-            agentId: event.agentId,
-            content: "",
-            councilReport: "",
-            isStreaming: true,
-            isComplete: false,
-            timestamp: new Date(),
-            currentIndex: event.current,
-            totalAgents: event.total,
-          };
-          addAgentResponse(newResponse);
-          break;
-        }
-
-        case "agent_chunk": {
-          // Accumulate chunk onto existing content
-          const state = useAppStore.getState();
-          const existing = state.activeSession?.agentResponses.find(
-            (r) => r.agentId === event.agentId,
-          );
-          if (existing) {
-            updateAgentResponse(event.agentId, {
-              content: existing.content + event.chunk,
-            });
-          }
-          break;
-        }
-
-        case "agent_complete": {
-          updateAgentResponse(event.agentId, {
-            content: event.fullResponse,
-            councilReport: event.councilReport,
-            isStreaming: false,
-            isComplete: true,
-          });
-          break;
-        }
-
-        case "agent_error": {
-          updateAgentResponse(event.agentId, {
-            error: event.error,
-            isStreaming: false,
-            isComplete: true,
-          });
-          break;
-        }
-
-        case "arbiter_start": {
-          // UI can trigger the arbiter loading state
-          break;
-        }
-
-        case "arbiter_chunk": {
-          updateArbiterStream(event.chunk);
-          break;
-        }
-
-        case "arbiter_complete": {
-          const verdict: ArbitersVerdict = {
-            ...event.verdict,
-            isStreaming: false,
-            isComplete: true,
-          };
-          setVerdict(verdict);
-          break;
-        }
-
-        case "round_start": {
-          updateRoundProgress({
-            currentRound: event.round,
-            maxRounds: event.maxRounds,
-            reportsCount: 0,
-          });
-          break;
-        }
-
-        case "round_complete": {
-          updateRoundProgress({
-            currentRound: event.round,
-            maxRounds: event.maxRounds,
-            reportsCount: event.reportsCount,
-          });
-          break;
-        }
-
-        case "consensus_check": {
-          updateConsensus({
-            hasConsensus: event.hasConsensus,
-            agreement: event.agreement,
-            direction: event.direction,
-          });
-          break;
-        }
-
-        case "error": {
-          setError(event.message);
-          finalizeSession();
-          break;
-        }
-
-        case "done": {
-          trackEventRef.current("session_complete");
-          break;
-        }
-      }
-    },
-    [
-      addAgentResponse,
-      updateAgentResponse,
-      setVerdict,
-      updateArbiterStream,
-      finalizeSession,
-      updateRoundProgress,
-      updateConsensus,
+      handleEvent,
     ],
   );
 

@@ -176,13 +176,15 @@ export function FearIndexGauge() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 mt-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
         {data?.components &&
           Object.entries(data.components).map(([key, comp], idx) => (
-            <div key={idx} className="text-center p-3 rounded-xl bg-card-hover/30">
-              <div className="text-xs text-text-muted">{componentLabels[key] || key}</div>
+            <div key={idx} className="text-center p-2 sm:p-3 rounded-xl bg-card-hover/30">
+              <div className="text-[10px] sm:text-xs text-text-muted truncate">
+                {componentLabels[key] || key}
+              </div>
               <div
-                className="text-lg font-bold"
+                className="text-base sm:text-lg font-bold"
                 style={{
                   color:
                     (comp?.score ?? 50) > 50

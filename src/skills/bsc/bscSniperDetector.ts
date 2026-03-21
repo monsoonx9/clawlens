@@ -78,7 +78,7 @@ async function analyzeWallet(
 export const sniperDetector: Skill = {
   id: "bsc/sniper-detector",
   name: "Sniper Detector",
-  namespace: "binance",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Identifies sniper wallets by analyzing transaction patterns, token focus, and profit-taking behavior. Useful for detecting potential snipers in new token launches.",

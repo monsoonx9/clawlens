@@ -12,6 +12,13 @@ function getSessionIdFromHeaders(request: NextRequest): string | null {
   return request.headers.get("x-session-id");
 }
 
+function getAndValidateSessionId(request: NextRequest): string | null {
+  const sessionId = getSessionId(request) || getSessionIdFromHeaders(request);
+  if (!sessionId) return null;
+  const isValid = /^[a-zA-Z0-9_-]{16,64}$/.test(sessionId);
+  return isValid ? sessionId : null;
+}
+
 function isMaskedKey(key: string | undefined): boolean {
   if (!key) return false;
   return key.includes("****");
@@ -51,10 +58,10 @@ async function mergeKeys(sessionId: string, newKeys: APIKeys): Promise<APIKeys> 
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionId = getSessionId(request) || getSessionIdFromHeaders(request);
+    const sessionId = getAndValidateSessionId(request);
 
     if (!sessionId) {
-      return NextResponse.json({ error: "No session found" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const keys = await getKeys(sessionId);
@@ -92,10 +99,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionId = getSessionId(request) || getSessionIdFromHeaders(request);
+    const sessionId = getAndValidateSessionId(request);
 
     if (!sessionId) {
-      return NextResponse.json({ error: "No session found" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -159,10 +166,10 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const sessionId = getSessionId(request) || getSessionIdFromHeaders(request);
+    const sessionId = getAndValidateSessionId(request);
 
     if (!sessionId) {
-      return NextResponse.json({ error: "No session found" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     await deleteKeys(sessionId);

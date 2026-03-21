@@ -4,7 +4,7 @@ import { readContract, getCode, BSCNetwork } from "@/lib/bscClient";
 export const bscContractReader: Skill = {
   id: "bsc/bsc-contract-reader",
   name: "BSC Contract Reader",
-  namespace: "claw-council",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Read data from any BSC (BNB Smart Chain) smart contract by calling view/pure functions. Also check if an address is a contract or EOA.",

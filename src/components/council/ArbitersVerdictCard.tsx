@@ -46,7 +46,7 @@ export function ArbitersVerdictCard({
   // If not complete and we have streaming text, show the streaming view
   if (verdict && !verdict.isComplete && arbiterStreamText) {
     return (
-      <div className="bg-accent-bg backdrop-blur-md border border-[color-mix(in_srgb,var(--color-accent),transparent_70%)] rounded-2xl p-6 mt-6 shadow-[0_0_30px_color-mix(in_srgb,var(--color-accent),transparent_95%)]">
+      <div className="bg-accent-bg backdrop-blur-md border border-[color-mix(in_srgb,var(--color-accent),transparent_70%)] rounded-2xl p-4 sm:p-6 mt-4 sm:mt-6 shadow-[0_0_30px_color-mix(in_srgb,var(--color-accent),transparent_95%)]">
         <div className="flex items-center gap-3 mb-4">
           <Crown className="w-5 h-5 text-accent animate-pulse" />
           <span className="text-accent text-sm font-bold tracking-widest uppercase">
@@ -54,9 +54,9 @@ export function ArbitersVerdictCard({
           </span>
         </div>
         <div className="bg-[color-mix(in_srgb,var(--color-card),transparent_50%)] rounded-xl p-4 border border-[color-mix(in_srgb,var(--color-card-border),transparent_50%)] min-h-[100px]">
-          <p className="text-text-primary text-sm font-mono whitespace-pre-wrap leading-relaxed [opacity:0.9] transition-opacity duration-75">
+          <p className="text-text-primary text-sm font-mono whitespace-pre-wrap leading-relaxed break-words [opacity:0.9] transition-opacity duration-75">
             {arbiterStreamText}
-            <span className="inline-block w-1.5 h-3.5 bg-accent ml-1 animate-[blink_1s_infinite] align-middle" />
+            <span className="inline-block w-2 h-4 bg-accent ml-1 animate-[blink_1s_infinite] align-middle" />
           </p>
         </div>
       </div>
@@ -65,10 +65,12 @@ export function ArbitersVerdictCard({
 
   if (isLoading || !verdict || !verdict.isComplete) {
     return (
-      <div className="bg-accent-bg backdrop-blur-md border-2 border-[color-mix(in_srgb,var(--color-accent),transparent_80%)] rounded-2xl p-6 mt-6 animate-[subtle-pulse_2s_infinite]">
-        <div className="flex items-center gap-3 justify-center py-8">
-          <Loader2 className="w-6 h-6 text-accent animate-spin" />
-          <span className="text-accent font-semibold">The Arbiter is synthesizing...</span>
+      <div className="bg-accent-bg backdrop-blur-md border-2 border-[color-mix(in_srgb,var(--color-accent),transparent_80%)] rounded-2xl p-4 sm:p-6 mt-4 sm:mt-6 animate-[subtle-pulse_2s_infinite]">
+        <div className="flex items-center gap-3 justify-center py-6 sm:py-8">
+          <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-accent animate-spin" />
+          <span className="text-accent font-semibold text-sm sm:text-base">
+            The Arbiter is synthesizing...
+          </span>
         </div>
       </div>
     );
@@ -109,7 +111,7 @@ export function ArbitersVerdictCard({
     <>
       <motion.div
         ref={cardRef}
-        className="bg-accent-bg backdrop-blur-md border-2 border-[color-mix(in_srgb,var(--color-accent),transparent_70%)] rounded-2xl p-6 mt-6 shadow-[0_0_40px_color-mix(in_srgb,var(--color-accent),transparent_92%)]"
+        className="bg-accent-bg backdrop-blur-md border-2 border-[color-mix(in_srgb,var(--color-accent),transparent_70%)] rounded-2xl p-4 sm:p-6 mt-4 sm:mt-6 shadow-[0_0_40px_color-mix(in_srgb,var(--color-accent),transparent_92%)]"
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={getTransition({ duration: 0.5, ease: "easeOut", delay: 0.2 }, prefersReduced)}
@@ -163,7 +165,7 @@ export function ArbitersVerdictCard({
                       >
                         {config.displayName}
                       </span>
-                      <p className="text-text-secondary text-sm leading-relaxed">
+                      <p className="text-text-secondary text-sm leading-relaxed break-words">
                         {dissent.reason}
                       </p>
                     </div>
@@ -180,17 +182,17 @@ export function ArbitersVerdictCard({
           <div className="text-text-muted text-xs uppercase tracking-widest font-bold mb-2">
             Final Verdict
           </div>
-          <p className="text-text-primary text-base font-medium leading-relaxed whitespace-pre-wrap">
+          <p className="text-text-primary text-base font-medium leading-relaxed whitespace-pre-wrap break-words">
             {verdict.finalVerdict}
           </p>
 
           {/* Confidence */}
-          <div className="mt-5 max-w-sm">
+          <div className="mt-5 max-w-full sm:max-w-sm">
             <div className="flex justify-between text-xs font-bold text-text-muted mb-1.5 uppercase tracking-wider">
               <span>Confidence</span>
               <span className="text-accent">{verdict.confidence}%</span>
             </div>
-            <div className="w-full bg-card border border-card-border rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-card border border-card-border rounded-full h-2 sm:h-3 overflow-hidden">
               <motion.div
                 className="bg-accent h-full rounded-full shadow-[0_0_8px_color-mix(in_srgb,var(--color-accent),transparent_70%)]"
                 initial={{ width: "0%" }}
@@ -210,7 +212,9 @@ export function ArbitersVerdictCard({
             <Eye className="w-4 h-4 text-accent shrink-0 mt-0.5" />
             <div>
               <span className="text-accent text-sm font-bold block mb-1">Watch This</span>
-              <div className="text-text-secondary text-sm space-y-1">{verdict.watchThis}</div>
+              <div className="text-text-secondary text-sm space-y-1 break-words">
+                {verdict.watchThis}
+              </div>
             </div>
           </div>
         )}

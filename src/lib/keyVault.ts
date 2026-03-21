@@ -218,13 +218,58 @@ export async function validateLinkCode(code: string): Promise<string | null> {
 
   try {
     const sessionId = await redis.get<string>(getLinkCodeRedisKey(code));
-    if (sessionId) {
-      await redis.del(getLinkCodeRedisKey(code));
-    }
     return sessionId;
   } catch (error) {
     console.error("[KeyVault] Failed to validate link code:", error);
     return null;
+  }
+}
+
+export async function deleteLinkCode(code: string): Promise<void> {
+  const redis = getRedis();
+  if (!redis) {
+    return;
+  }
+
+  try {
+    await redis.del(getLinkCodeRedisKey(code));
+  } catch (error) {
+    console.error("[KeyVault] Failed to delete link code:", error);
+  }
+}
+
+export interface ValidateLinkCodeResult {
+  valid: boolean;
+  sessionId: string | null;
+  expired: boolean;
+  wrongBot: boolean;
+}
+
+export async function validateLinkCodeForSession(
+  code: string,
+  sessionId: string,
+): Promise<ValidateLinkCodeResult> {
+  const redis = getRedis();
+  if (!redis) {
+    return { valid: false, sessionId: null, expired: false, wrongBot: false };
+  }
+
+  try {
+    const storedSessionId = await redis.get<string>(getLinkCodeRedisKey(code));
+
+    if (!storedSessionId) {
+      return { valid: false, sessionId: null, expired: true, wrongBot: false };
+    }
+
+    if (storedSessionId !== sessionId) {
+      return { valid: false, sessionId: null, expired: false, wrongBot: true };
+    }
+
+    await redis.del(getLinkCodeRedisKey(code));
+    return { valid: true, sessionId: storedSessionId, expired: false, wrongBot: false };
+  } catch (error) {
+    console.error("[KeyVault] Failed to validate link code for session:", error);
+    return { valid: false, sessionId: null, expired: false, wrongBot: false };
   }
 }
 

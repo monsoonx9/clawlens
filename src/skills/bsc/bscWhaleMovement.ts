@@ -6,7 +6,7 @@ const WHALE_THRESHOLD_BNB = 100;
 export const bscWhaleMovement: Skill = {
   id: "bsc/bsc-whale-movement",
   name: "BSC Whale Movement",
-  namespace: "claw-council",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Monitor BSC (BNB Smart Chain) wallet addresses for large BNB holdings (whale tracking). Checks if an address holds more than 100 BNB.",

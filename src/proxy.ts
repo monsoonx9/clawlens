@@ -34,7 +34,7 @@ function setSessionCookie(response: NextResponse, sessionId: string): void {
   });
 }
 
-export function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Run cleanup periodically (only once per instance)
   if (!cleanupInitialized) {
     cleanupInitialized = true;
@@ -54,7 +54,7 @@ export function middleware(request: NextRequest) {
     sessionId = generateSessionId();
     // Store session in Redis
     const fingerprint = generateDeviceFingerprint(userAgent);
-    createSession(
+    await createSession(
       sessionId,
       {
         fingerprint,
@@ -66,11 +66,11 @@ export function middleware(request: NextRequest) {
       },
       userAgent,
       ipAddress,
-    ).catch(console.error);
+    );
   } else {
     // Validate/update existing session in Redis
     // We can assume sessionId is not null here due to the if/else
-    getSession(sessionId!).catch(console.error);
+    await getSession(sessionId!);
   }
 
   // Final confirmation that sessionId is not null

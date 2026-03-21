@@ -4,7 +4,7 @@ import { getERC20TokenInfo, BSCNetwork } from "@/lib/bscClient";
 export const bscTokenOnChain: Skill = {
   id: "bsc/bsc-token-on-chain",
   name: "BSC Token On-Chain",
-  namespace: "claw-council",
+  namespace: "bsc",
   version: "1.0.0",
   description:
     "Get on-chain information about any ERC20 token on BSC (BNB Smart Chain) including name, symbol, decimals, and total supply.",

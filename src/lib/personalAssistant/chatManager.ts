@@ -134,7 +134,7 @@ export class ChatManager {
       })
       .eq("id", session.id);
 
-    return this.mapMessage(data);
+    return this.mapMessage(data, sessionId);
   }
 
   async getMessages(sessionId: string, userId: string, limit = 100): Promise<AssistantMessage[]> {
@@ -155,7 +155,7 @@ export class ChatManager {
       return [];
     }
 
-    return data.map(this.mapMessage);
+    return data.map((msg: any) => this.mapMessage(msg, sessionId));
   }
 
   async getUserPreferences(userId: string): Promise<UserAssistantPreferences | null> {
@@ -306,10 +306,10 @@ export class ChatManager {
     };
   }
 
-  private mapMessage(data: any): AssistantMessage {
+  private mapMessage(data: any, sessionId: string): AssistantMessage {
     return {
       id: data.id,
-      sessionId: data.session_id,
+      sessionId: sessionId,
       role: data.role,
       content: data.content,
       skillsUsed: data.skills_used || [],

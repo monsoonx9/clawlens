@@ -56,7 +56,7 @@ export interface MemeRushResult {
 export const memeRush: Skill = {
   id: "binance/meme-rush",
   name: "Meme Rush",
-  namespace: "claw-council",
+  namespace: "binance",
   version: "1.0.0",
   description:
     "Real-time meme token discovery from launchpads (Pump.fun, Four.meme, etc.). Track new tokens on bonding curve, tokens about to migrate, and migrated tokens. Also provides AI-powered market hot topics with associated tokens.",

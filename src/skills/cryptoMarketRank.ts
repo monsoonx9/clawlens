@@ -83,7 +83,7 @@ export interface CryptoMarketRankResult {
 export const cryptoMarketRank: Skill = {
   id: "binance/crypto-market-rank",
   name: "Crypto Market Rank",
-  namespace: "claw-council",
+  namespace: "binance",
   version: "2.0.0",
   description:
     "Comprehensive crypto market intelligence. Provides social hype rankings, trending tokens, Binance Alpha picks, smart money inflow rankings, and top trader PnL leaderboards. Use for market discovery and trend analysis.",

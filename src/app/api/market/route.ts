@@ -4,7 +4,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTickerPrice, getTicker24hr, getOrderBook } from "@/lib/binanceClient";
 import { getLatestBlock } from "@/lib/bscClient";
 
+function getSessionId(request: NextRequest): string | null {
+  return request.cookies.get("clawlens_session")?.value || request.headers.get("x-session-id");
+}
+
 export async function POST(req: NextRequest) {
+  const sessionId = getSessionId(req);
+
+  if (!sessionId) {
+    return NextResponse.json({ error: "Unauthorized - No session" }, { status: 401 });
+  }
+
+  const isValidSessionId = /^[a-zA-Z0-9_-]{16,64}$/.test(sessionId);
+  if (!isValidSessionId) {
+    return NextResponse.json({ error: "Invalid session format" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { action, params } = body;

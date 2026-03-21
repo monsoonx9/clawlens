@@ -20,7 +20,7 @@ export interface AddressInfoResult {
 export const addressInfo: Skill = {
   id: "binance/query-address-info",
   name: "Address Info",
-  namespace: "claw-council",
+  namespace: "binance",
   version: "1.0.0",
   description:
     "Query any on-chain wallet address to retrieve all token holdings, current prices, and 24h price changes. Supports BSC, Base, and Solana chains.",

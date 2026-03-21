@@ -62,6 +62,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const MAX_MESSAGE_LENGTH = 10000;
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return new Response(
+        JSON.stringify({
+          error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     let activeSessionId = providedSessionId;
 
     if (!activeSessionId) {

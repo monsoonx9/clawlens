@@ -115,6 +115,7 @@ export default function AssistantPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const streamingContentRef = useRef("");
 
   const loadPersonality = useCallback(async () => {
     try {
@@ -188,8 +189,18 @@ export default function AssistantPage() {
   }, [activeSession, loadMessages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: isStreaming ? "auto" : "smooth" });
+    if (messages.length === 0 && !streamingContent) return;
+
+    requestAnimationFrame(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: isStreaming ? "auto" : "smooth" });
+      }
+    });
   }, [messages, streamingContent, isStreaming]);
+
+  useEffect(() => {
+    streamingContentRef.current = streamingContent;
+  }, [streamingContent]);
 
   const createNewSession = async () => {
     try {
@@ -363,7 +374,7 @@ export default function AssistantPage() {
                   id: `asst_${Date.now()}`,
                   sessionId: session.sessionId,
                   role: "assistant",
-                  content: event.content || streamingContent,
+                  content: event.content || streamingContentRef.current,
                   skillsUsed: [],
                   createdAt: new Date(),
                 });
@@ -380,6 +391,7 @@ export default function AssistantPage() {
     } catch (err: any) {
       if (err.name === "AbortError") {
         setStreamingContent("");
+        streamingContentRef.current = "";
       } else {
         setError(err.message || "Failed to send message");
         toast("error", err.message || "Failed to send message");
@@ -682,7 +694,7 @@ export default function AssistantPage() {
                           setInput(prompt.text);
                           inputRef.current?.focus();
                         }}
-                        className="shrink-0 w-[260px] sm:w-auto snap-center text-left p-3 sm:p-4 rounded-xl glass border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-card-hover)] transition-all duration-200 group"
+                        className="shrink-0 w-[200px] xs:w-[240px] sm:w-auto snap-center text-left p-3 sm:p-4 rounded-xl glass border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-card-hover)] transition-all duration-200 group"
                       >
                         <p className="text-sm sm:text-base text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors duration-200">
                           {prompt.text}
@@ -723,7 +735,7 @@ export default function AssistantPage() {
                             : "glass px-3 sm:px-4 py-2 sm:py-3 rounded-[20px] rounded-tl-[4px]"
                         }
                       >
-                        <div className="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-card-border prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-table:border prose-table:border-card-border prose-table:rounded-xl overflow-hidden max-w-none text-[var(--color-text-primary)]">
+                        <div className="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-card-border prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-table:border prose-table:border-card-border prose-table:rounded-xl overflow-hidden max-w-full break-words text-[var(--color-text-primary)]">
                           {message.role === "user" ? (
                             <p className="whitespace-pre-wrap leading-relaxed m-0">
                               {message.content}

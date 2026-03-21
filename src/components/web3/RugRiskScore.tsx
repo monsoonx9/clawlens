@@ -106,7 +106,7 @@ export function RugRiskScore({
           placeholder="Contract address"
           value={inputAddress}
           onChange={(e) => setInputAddress(e.target.value)}
-          className="flex-1 glass-input px-3 py-2 rounded-lg text-text-primary text-xs font-mono"
+          className="flex-1 glass-input px-3 py-2 rounded-lg text-text-primary text-sm font-mono"
         />
         <button
           onClick={fetchData}

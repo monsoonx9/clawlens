@@ -61,7 +61,7 @@ export function SquarePostModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -70,7 +70,7 @@ export function SquarePostModal({
       <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--color-bg),black_80%)] backdrop-blur-md" />
 
       {/* Modal Card */}
-      <div className="relative bg-card border border-card-border rounded-[16px] p-6 w-full max-w-lg mt-24 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="relative bg-card border border-card-border rounded-[16px] p-4 sm:p-6 w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-y-auto shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">

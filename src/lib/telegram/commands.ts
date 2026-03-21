@@ -285,6 +285,486 @@ export async function handleRugCheckCommand(
   return result.formattedMessage;
 }
 
+// ==================== NEW COMMAND HANDLERS ====================
+
+export async function handlePriceCommand(context: CommandContext, args: string): Promise<string> {
+  const symbol = args.trim().toUpperCase();
+  if (!symbol) {
+    return "Please provide a symbol.\n\nExample: /price BTC";
+  }
+
+  const result = await telegramSkillService.execute(
+    "binance/spot",
+    { symbol: symbol + "USDT" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch price.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleFearIndexCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const token = args.trim().toUpperCase() || "BTC";
+
+  const result = await telegramSkillService.execute(
+    "claw-council/fear-index",
+    {
+      token,
+      socialHypeScore: 50,
+      memeRushMomentum: 50,
+      smartMoneyDirection: 50,
+      priceChange24h: 0,
+    },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to calculate fear index.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleVolumeCommand(context: CommandContext, args: string): Promise<string> {
+  const symbol = args.trim().toUpperCase();
+  if (!symbol) {
+    return "Please provide a symbol.\n\nExample: /volume BTC";
+  }
+
+  const result = await telegramSkillService.execute(
+    "binance/volume-analysis",
+    { symbol: symbol + "USDT" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to analyze volume.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleOrderBookCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase();
+  if (!symbol) {
+    return "Please provide a symbol.\n\nExample: /orderbook BTC";
+  }
+
+  const result = await telegramSkillService.execute(
+    "binance/order-book-analysis",
+    { symbol: symbol + "USDT" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to analyze order book.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleTechnicalAnalysisCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase();
+  if (!symbol) {
+    return "Please provide a symbol.\n\nExample: /ta BTC";
+  }
+
+  const result = await telegramSkillService.execute(
+    "binance/technical-indicators",
+    { symbol: symbol + "USDT" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to calculate technical indicators.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleDCAStrategistCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const parts = args.trim().split(/\s+/);
+  const symbol = parts[0]?.toUpperCase() || "BTC";
+  const budget = Number(parts[1]) || 500;
+  const weeks = Number(parts[2]) || 12;
+  const risk = Number(parts[3]) || 5;
+
+  const result = await telegramSkillService.execute(
+    "claw-council/dca-strategist",
+    {
+      targetAsset: symbol,
+      totalBudgetUSD: budget,
+      durationWeeks: weeks,
+      riskTolerance: risk,
+    },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to generate DCA plan.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleFuturesCommand(context: CommandContext, args: string): Promise<string> {
+  const symbol = args.trim().toUpperCase();
+  if (!symbol) {
+    return "Please provide a symbol.\n\nExample: /futures BTC";
+  }
+
+  const result = await telegramSkillService.execute(
+    "binance/futures-data",
+    { symbol: symbol + "USDT" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch futures data.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleTrendingCommand(context: CommandContext): Promise<string> {
+  const result = await telegramSkillService.execute(
+    "binance/crypto-market-rank",
+    { limit: 10 },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch trending.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleNewsCommand(context: CommandContext): Promise<string> {
+  const result = await telegramSkillService.execute(
+    "claw-council/news-radar",
+    { limit: 5 },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch news.";
+  }
+  return result.formattedMessage;
+}
+
+// ==================== BSC COMMANDS ====================
+
+export async function handleBSCWhaleCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const address = args.trim();
+  if (!address) {
+    return "Please provide a BSC address.\n\nExample: /bsc-whale 0x1234...abcd";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/bsc-whale-movement",
+    { address, threshold: 100, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to check BSC whale.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleBSCWalletCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const address = args.trim();
+  if (!address) {
+    return "Please provide a BSC address.\n\nExample: /bsc-wallet 0x1234...abcd";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/bsc-wallet-tracker",
+    { address, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch wallet.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleBSCTokenCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const address = args.trim();
+  if (!address) {
+    return "Please provide a token address.\n\nExample: /bsc-token 0x1234...abcd";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/bsc-token-on-chain",
+    { tokenAddress: address, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch token info.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleBSCTxCommand(context: CommandContext, args: string): Promise<string> {
+  const hash = args.trim();
+  if (!hash) {
+    return "Please provide a transaction hash.\n\nExample: /bsc-tx 0xabcd...1234";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/bsc-transaction-analyzer",
+    { txHash: hash, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to analyze transaction.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleBSCContractCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const parts = args.trim().split(/\s+/);
+  const address = parts[0];
+  const method = parts[1] || "symbol";
+
+  if (!address) {
+    return "Please provide a contract address and method.\n\nExample: /bsc-read 0x1234... symbol";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/bsc-contract-reader",
+    { contractAddress: address, method, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to read contract.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleBSCBlockCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const blockNumber = parseInt(args.trim()) || undefined;
+
+  const result = await telegramSkillService.execute(
+    "bsc/bsc-block-explorer",
+    { blockNumber, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to explore block.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleSniperCommand(context: CommandContext, args: string): Promise<string> {
+  const address = args.trim();
+  if (!address) {
+    return "Please provide a token address.\n\nExample: /sniper 0x1234...abcd";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/sniper-detector",
+    { tokenAddress: address, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to detect snipers.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleBurnCommand(context: CommandContext, args: string): Promise<string> {
+  const address = args.trim();
+  if (!address) {
+    return "Please provide a token address.\n\nExample: /burn 0x1234...abcd";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/burn-tracker",
+    { token_address: address, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to track burns.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleClusterCommand(context: CommandContext, args: string): Promise<string> {
+  const address = args.trim();
+  if (!address) {
+    return "Please provide a wallet address.\n\nExample: /cluster 0x1234...abcd";
+  }
+
+  const result = await telegramSkillService.execute(
+    "bsc/wallet-cluster",
+    { address, network: "bsc" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to analyze wallet cluster.";
+  }
+  return result.formattedMessage;
+}
+
+// ==================== FUTURES COMMANDS ====================
+
+export async function handleSmartMoneyCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase() || "BTC";
+
+  const result = await telegramSkillService.execute(
+    "binance/smart-money-radar",
+    { symbol: symbol + "USDT" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch smart money.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleSmartAccumulationCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase() || "BTC";
+
+  const result = await telegramSkillService.execute(
+    "binance/smart-accumulation",
+    { symbols: [symbol] },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch accumulation data.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleTakerPressureCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase() || "BTC";
+
+  const result = await telegramSkillService.execute(
+    "binance/taker-pressure",
+    { symbol: symbol + "USDT" },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch taker pressure.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleVolatilityCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase() || "BTC";
+
+  const result = await telegramSkillService.execute(
+    "binance/volatility-rank",
+    { symbol: symbol + "USDT", limit: 20 },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch volatility.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleFundingHeatmapCommand(context: CommandContext): Promise<string> {
+  const result = await telegramSkillService.execute(
+    "binance/funding-heatmap",
+    { limit: 20 },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch funding heatmap.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleFuturesWhaleCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase() || "BTC";
+
+  const result = await telegramSkillService.execute(
+    "binance/whale-footprint",
+    { symbol: symbol + "USDT", limit: 10 },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to fetch whale footprint.";
+  }
+  return result.formattedMessage;
+}
+
+export async function handleDCABacktestCommand(
+  context: CommandContext,
+  args: string,
+): Promise<string> {
+  const symbol = args.trim().toUpperCase();
+  if (!symbol) {
+    return "Please provide a symbol.\n\nExample: /dcaback BTC";
+  }
+
+  const result = await telegramSkillService.execute(
+    "binance/dca-backtester",
+    { symbol: symbol + "USDT", amount_per_interval: 100, interval_days: 7, total_days: 365 },
+    { userId: context.userId || "" },
+  );
+
+  if (!result.success || !result.formattedMessage) {
+    return result.error || "Failed to backtest DCA.";
+  }
+  return result.formattedMessage;
+}
+
 export function parseCommand(text: string): { command: string; args: string } | null {
   const match = text.match(/^\/(\w+)(?:\s+(.*))?$/);
   if (!match) return null;

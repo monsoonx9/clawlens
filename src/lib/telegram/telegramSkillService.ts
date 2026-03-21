@@ -65,6 +65,10 @@ export class TelegramSkillService {
     llmApiKey?: string;
     llmProvider?: string;
     llmModel?: string;
+    llmBaseUrl?: string;
+    llmEndpoint?: string;
+    llmDeploymentName?: string;
+    squareApiKey?: string;
   }> {
     try {
       const { data } = await this.supabase
@@ -85,6 +89,10 @@ export class TelegramSkillService {
         llmApiKey: keys.llmApiKey,
         llmProvider: keys.llmProvider,
         llmModel: keys.llmModel,
+        llmBaseUrl: keys.llmBaseUrl,
+        llmEndpoint: keys.llmEndpoint,
+        llmDeploymentName: keys.llmDeploymentName,
+        squareApiKey: keys.squareApiKey,
       };
     } catch {
       return { binanceApiKey: "", binanceSecretKey: "" };

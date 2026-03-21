@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
         try {
           await runCouncilDebate({
             query,
+            sessionId,
             apiKeys,
             portfolio: portfolioSnapshot,
             preferences,

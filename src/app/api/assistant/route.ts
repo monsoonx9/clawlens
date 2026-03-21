@@ -108,7 +108,6 @@ export async function POST(request: NextRequest) {
       const skillContext = {
         sessionId,
         userId: sessionId,
-        signal: request.signal,
         apiKeys: {
           binanceApiKey: apiKeys.binanceApiKey || "",
           binanceSecretKey: apiKeys.binanceSecretKey || "",

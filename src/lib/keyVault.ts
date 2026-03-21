@@ -261,11 +261,12 @@ export async function validateLinkCodeForSession(
       return { valid: false, sessionId: null, expired: true, wrongBot: false };
     }
 
+    await redis.del(getLinkCodeRedisKey(code));
+
     if (storedSessionId !== sessionId) {
-      return { valid: false, sessionId: null, expired: false, wrongBot: true };
+      return { valid: false, sessionId: storedSessionId, expired: false, wrongBot: true };
     }
 
-    await redis.del(getLinkCodeRedisKey(code));
     return { valid: true, sessionId: storedSessionId, expired: false, wrongBot: false };
   } catch (error) {
     console.error("[KeyVault] Failed to validate link code for session:", error);

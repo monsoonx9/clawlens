@@ -346,11 +346,12 @@ async function handleCommand(
         break;
       }
 
-      const { validateLinkCode, deleteLinkCode } = await import("@/lib/keyVault");
+      const { validateLinkCode, deleteLinkCode, getKeys, storeKeys } =
+        await import("@/lib/keyVault");
       const code = args.trim().toUpperCase();
-      const validSessionId = await validateLinkCode(code);
+      const webSessionId = await validateLinkCode(code);
 
-      if (!validSessionId) {
+      if (!webSessionId) {
         await bot.sendMessage(
           chatId,
           "❌ Invalid or expired link code.\n\nPlease get a new code from Settings → Telegram Bot.",
@@ -359,28 +360,35 @@ async function handleCommand(
         break;
       }
 
-      const linked = await autoLinkUser(
-        chatId,
-        telegramUserId,
-        validSessionId,
-        username,
-        firstName,
-      );
+      const botSessionId = sessionId;
 
-      if (linked) {
-        await deleteLinkCode(code);
-        await bot.sendMessage(
-          chatId,
-          "✅ *Account Linked!*\n\nYour Telegram is now connected to your ClawLens account.\n\nYou can now access all features including portfolio, alerts, and chat with AI!",
-          getMainKeyboard(),
-        );
-      } else {
+      const linked = await autoLinkUser(chatId, telegramUserId, webSessionId, username, firstName);
+
+      if (!linked) {
         await bot.sendMessage(
           chatId,
           "❌ Failed to link account. Please try again.",
           getMainKeyboard(),
         );
+        break;
       }
+
+      if (webSessionId !== botSessionId) {
+        const webKeys = await getKeys(webSessionId);
+        if (webKeys && Object.values(webKeys).some((v) => v && v !== "")) {
+          await storeKeys(botSessionId, webKeys);
+          console.log(
+            `[Telegram] Copied API keys from web session ${webSessionId.slice(0, 8)}... to bot session ${botSessionId.slice(0, 8)}...`,
+          );
+        }
+      }
+
+      await deleteLinkCode(code);
+      await bot.sendMessage(
+        chatId,
+        "✅ *Account Linked!*\n\nYour Telegram is now connected to your ClawLens account.\n\nYou can now access all features including portfolio, alerts, and chat with AI!",
+        getMainKeyboard(),
+      );
       break;
     }
 

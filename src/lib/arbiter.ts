@@ -2418,6 +2418,7 @@ export async function fetchSkillData(
 
 export interface RunCouncilDebateParams {
   query: string;
+  sessionId: string;
   apiKeys: APIKeys;
   portfolio: PortfolioSnapshot | null;
   preferences: UserPreferences;
@@ -2446,6 +2447,7 @@ export interface RunCouncilDebateParams {
 export async function runCouncilDebate(params: RunCouncilDebateParams): Promise<void> {
   const {
     query,
+    sessionId,
     apiKeys,
     portfolio,
     preferences,
@@ -2465,12 +2467,16 @@ export async function runCouncilDebate(params: RunCouncilDebateParams): Promise<
   const model = getDefaultModel(provider);
 
   const skillContext: SkillContext = {
+    sessionId,
     apiKeys: {
       binanceApiKey: apiKeys.binanceApiKey || "",
       binanceSecretKey: apiKeys.binanceSecretKey || "",
       llmProvider: provider,
       llmApiKey: llmApiKey,
       llmModel: model,
+      llmBaseUrl: apiKeys.llmBaseUrl,
+      llmEndpoint: apiKeys.llmEndpoint,
+      llmDeploymentName: apiKeys.llmDeploymentName,
       squareApiKey: apiKeys.squareApiKey || "",
     },
     portfolio: portfolio || undefined,

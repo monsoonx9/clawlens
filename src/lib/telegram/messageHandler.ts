@@ -83,7 +83,24 @@ export async function handleAIMessage(
 
   const userId = connection?.user_id || sessionId;
 
-  const apiKeys = await getKeys(userId);
+  console.log(
+    `[Telegram AI] chatId=${chatId}, sessionId=${sessionId}, userId=${userId}, hasConnection=${!!connection}`,
+  );
+
+  let apiKeys = await getKeys(userId);
+  console.log(
+    `[Telegram AI] getKeys result: hasBinance=${!!apiKeys?.binanceApiKey}, hasLLM=${!!apiKeys?.llmApiKey}, llmProvider=${apiKeys?.llmProvider}`,
+  );
+
+  if ((!apiKeys || !apiKeys.llmApiKey) && connection) {
+    const altKeys = await getKeys(sessionId);
+    if (altKeys?.llmApiKey) {
+      console.log(
+        `[Telegram AI] Keys found in bot session (user may need to re-link). Using bot session keys.`,
+      );
+      apiKeys = altKeys;
+    }
+  }
 
   if (!apiKeys || !apiKeys.llmApiKey) {
     return "⚠️ You haven't configured your AI API keys yet.\n\nPlease visit the ClawLens web app → Settings → API Keys to add your LLM provider key (OpenAI, Gemini, Groq, etc.).\n\nOnce configured, you can chat with me directly here!";

@@ -132,6 +132,10 @@ export function useCouncilSession() {
       if (!skill) throw new Error("Portfolio Pulse skill not found");
 
       const context: SkillContext = {
+        sessionId:
+          typeof document !== "undefined"
+            ? document.cookie.match(/clawlens_session=([^;]+)/)?.[1]
+            : undefined,
         apiKeys: {
           binanceApiKey: apiKeys.binanceApiKey,
           binanceSecretKey: apiKeys.binanceSecretKey,

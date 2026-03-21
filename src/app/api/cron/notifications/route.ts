@@ -159,7 +159,7 @@ async function sendPortfolioDigest(): Promise<void> {
       const apiKeys = await getUserApiKeys(user.user_id);
       if (!apiKeys?.binanceApiKey) continue;
 
-      const result = await skill.execute({}, { apiKeys });
+      const result = await skill.execute({}, { sessionId: user.user_id, apiKeys });
 
       if (result.success && result.data) {
         const data = result.data as {

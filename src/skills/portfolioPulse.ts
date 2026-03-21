@@ -428,8 +428,12 @@ export const portfolioPulse: Skill = {
       const errMsg = error instanceof Error ? error.message : String(error);
       return {
         success: false,
-        data: { status: "unavailable", message: "Unable to fetch portfolio data" },
-        summary: `Unable to fetch portfolio data. Error: ${errMsg}. Please check that your Binance API keys have read permissions and no IP restrictions.`,
+        data: {
+          status: "error",
+          message: "Unable to fetch portfolio data",
+          error: errMsg,
+        },
+        summary: `[ERROR] Could not retrieve portfolio data from Binance. Error: ${errMsg}. This means either the API keys lack read permissions, there are IP restrictions, or Binance is blocking the connection.`,
         error: errMsg,
       };
     }

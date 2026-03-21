@@ -263,6 +263,10 @@ export async function POST(req: NextRequest) {
 
     const url = `https://${requestBaseUrl}${endpoint}${queryString ? `?${queryString}` : ""}`;
 
+    console.log(
+      `[Proxy] URL: ${url}, sessionId: ${sessionId ? "present" : "missing"}, requiresSign: ${requiresSign}, hasApiKey: ${!!binanceApiKey}, hasSecret: ${!!binanceSecretKey}`,
+    );
+
     const headers: Record<string, string> = {
       "Accept-Encoding": "identity",
       ...customHeaders,
@@ -302,6 +306,14 @@ export async function POST(req: NextRequest) {
 
     if (method === "GET" && response.ok) {
       setCachedResponse(cacheKey, data);
+    }
+
+    if (!response.ok) {
+      const errorPreview =
+        typeof data === "object" && data !== null ? JSON.stringify(data).slice(0, 200) : data;
+      console.error(`[Proxy] Binance error ${response.status}:`, errorPreview);
+    } else {
+      console.log(`[Proxy] Binance success: ${response.status}, keysPresent: ${!!binanceApiKey}`);
     }
 
     const cacheControl =

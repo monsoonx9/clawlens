@@ -268,7 +268,9 @@ async function binanceFetch<T>(
           method: "GET",
           params: queryParams,
           requiresSign,
-          signature, // Send pre-computed signature for onboarding/test connectivity
+          // NOTE: Do NOT send signature from browser. Proxy always signs
+          // server-side with its own fresh timestamp to avoid timestamp
+          // conflicts between client and server.
         }),
       });
 

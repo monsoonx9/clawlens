@@ -1,7 +1,8 @@
 import { Redis } from "@upstash/redis";
 
-let redis: Redis | null = null;
-let redisInitialized = false;
+const getGlobal = () => globalThis as unknown as Record<string, unknown>;
+let redis: Redis | null = (getGlobal().__redis_client as Redis) || null;
+let redisInitialized = !!(getGlobal().__redis_client as Redis);
 
 export function getRedis(): Redis | null {
   if (redis) return redis;
@@ -28,6 +29,7 @@ export function getRedis(): Redis | null {
       url: redisUrl,
       token: redisToken,
     });
+    getGlobal().__redis_client = redis;
 
     if (!redisInitialized) {
       console.log("[Cache] Upstash Redis connected successfully");

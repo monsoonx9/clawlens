@@ -134,6 +134,33 @@ export class UserTelegramClient {
     return data.ok;
   }
 
+  async sendChatAction(
+    chatId: number,
+    action:
+      | "typing"
+      | "upload_photo"
+      | "upload_video"
+      | "upload_document"
+      | "find_location"
+      | "record_video"
+      | "record_voice"
+      | "upload_voice" = "typing",
+  ): Promise<void> {
+    const url = `${this.baseUrl}/sendChatAction`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        action,
+      }),
+    });
+  }
+
+  async sendTyping(chatId: number): Promise<void> {
+    return this.sendChatAction(chatId, "typing");
+  }
+
   static fromConfig(config: TelegramBotConfig): UserTelegramClient {
     return new UserTelegramClient(config.botToken);
   }

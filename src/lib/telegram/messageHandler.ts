@@ -42,6 +42,30 @@ async function saveChatHistory(chatId: number, history: ChatMessage[]): Promise<
   }
 }
 
+async function getLastInvokedSkills(chatId: number): Promise<string[]> {
+  try {
+    const redis = getRedis();
+    if (!redis) return [];
+    const key = `telegram:lastSkills:${chatId}`;
+    const data = await redis.get<string>(key);
+    if (!data) return [];
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+async function saveLastInvokedSkills(chatId: number, skills: string[]): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+    const key = `telegram:lastSkills:${chatId}`;
+    await redis.set(key, JSON.stringify(skills.slice(0, 5)), { ex: 60 * 60 }); // 1 hour TTL
+  } catch (e) {
+    console.error("[Telegram] Failed to save last invoked skills:", e);
+  }
+}
+
 export async function handleAIMessage(
   chatId: number,
   sessionId: string,
@@ -66,11 +90,20 @@ export async function handleAIMessage(
   }
 
   try {
+    // ── Fix 4: Build conversation history BEFORE skill routing ──
     const history = await getChatHistory(chatId);
+    const lastInvokedSkills = await getLastInvokedSkills(chatId);
 
-    const skillInvocations = skillRouter.analyzeIntent(userMessage);
+    // ── Fix 4: Pass priorMessages and lastInvokedSkills to analyzeIntent ──
+    const priorMessages = history.map((m) => ({ role: m.role, content: m.content }));
+    const skillInvocations = skillRouter.analyzeIntent(userMessage, {
+      priorMessages,
+      lastInvokedSkills,
+    });
+
     let skillResults: string[] = [];
     let skillsUsed: string[] = [];
+    let failedSkills: string[] = [];
 
     if (skillInvocations.length > 0) {
       const skillContext = {
@@ -82,6 +115,9 @@ export async function handleAIMessage(
           llmProvider: apiKeys.llmProvider,
           llmApiKey: apiKeys.llmApiKey,
           llmModel: apiKeys.llmModel,
+          llmBaseUrl: apiKeys.llmBaseUrl,
+          llmEndpoint: apiKeys.llmEndpoint,
+          llmDeploymentName: apiKeys.llmDeploymentName,
           squareApiKey: apiKeys.squareApiKey,
         },
       };
@@ -89,14 +125,12 @@ export async function handleAIMessage(
       const skillOutput = await skillRouter.executeSkills(skillInvocations, skillContext);
       skillResults = skillOutput.results.map((r) => r.summary || JSON.stringify(r.data, null, 2));
       skillsUsed = skillOutput.skillsUsed;
+      failedSkills = skillOutput.failedSkills;
     }
 
     const hasPortfolio = !!(apiKeys.binanceApiKey && apiKeys.binanceSecretKey);
-    const systemPrompt = getPersonalAssistantSystemPrompt("adaptive", firstName, {
-      hasPortfolio,
-      hasApiKeys: true,
-    });
 
+    // ── Fix 4: Conversation context built after skill routing (for LLM) ──
     let conversationContext = "";
     if (history.length > 0) {
       conversationContext =
@@ -109,19 +143,34 @@ export async function handleAIMessage(
 
     let enrichedMessage = userMessage;
 
+    // ── Fix 3: Report failed skills to LLM ──
+    let failureContext = "";
+    if (failedSkills.length > 0) {
+      failureContext = `\n\n--- SKILL FAILURES ---\nThe following tools failed to return data: ${failedSkills.join(", ")}. Mention this to the user and suggest they check their API key settings or try again. Do NOT pretend the data loaded successfully.\n--- END FAILURES ---`;
+    }
+
     const keyStatusContext = [
       `\n\n--- SYSTEM CONTEXT ---`,
       `Binance API Keys: ${hasPortfolio ? "CONFIGURED ✅" : "NOT CONFIGURED ❌ (user needs to add them in the web app Settings)"}`,
       `LLM Provider: ${apiKeys.llmProvider || "unknown"} ✅`,
       `Skills Executed: ${skillsUsed.length > 0 ? skillsUsed.join(", ") : "none"}`,
-    ].join("\n");
+      failedSkills.length > 0 ? `⚠️ Failed Skills: ${failedSkills.join(", ")}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     enrichedMessage += keyStatusContext;
+    enrichedMessage += failureContext;
     enrichedMessage += conversationContext;
 
     if (skillResults.length > 0) {
       enrichedMessage += `\n\n--- TOOL DATA (use this to answer) ---\n${skillResults.join("\n\n")}`;
     }
+
+    const systemPrompt = getPersonalAssistantSystemPrompt("adaptive", firstName, {
+      hasPortfolio,
+      hasApiKeys: true,
+    });
 
     const telegramSystemPrompt =
       systemPrompt +
@@ -167,12 +216,18 @@ export async function handleAIMessage(
         response += `\n\n🔧 <i>Tools used: ${skillsUsed.join(", ")}</i>`;
       }
 
+      // ── Fix 4: Save history after successful response ──
       const updatedHistory: ChatMessage[] = [
         ...history,
-        { role: "user", content: userMessage, timestamp: Date.now() },
-        { role: "assistant", content: response.slice(0, 1000), timestamp: Date.now() },
+        { role: "user" as const, content: userMessage, timestamp: Date.now() },
+        { role: "assistant" as const, content: response.slice(0, 1000), timestamp: Date.now() },
       ];
       await saveChatHistory(chatId, updatedHistory);
+
+      // ── Fix 4: Save last invoked skills for follow-up detection ──
+      if (skillsUsed.length > 0) {
+        await saveLastInvokedSkills(chatId, skillsUsed);
+      }
 
       return response;
     }

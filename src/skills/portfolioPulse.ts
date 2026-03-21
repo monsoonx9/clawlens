@@ -61,11 +61,12 @@ export const portfolioPulse: Skill = {
   async execute(input: Record<string, unknown>, context: SkillContext): Promise<SkillResult> {
     try {
       const { binanceApiKey, binanceSecretKey } = context.apiKeys;
+      const { sessionId } = context;
       const includeKlines = input.includeKlines !== false;
       const includeOrderBook = input.includeOrderBook !== false;
 
       // ── Step 1: Fetch raw account balances ──
-      const accountRes = await getAccountInfo(binanceApiKey, binanceSecretKey);
+      const accountRes = await getAccountInfo(binanceApiKey, binanceSecretKey, sessionId);
       if (!accountRes.success || !accountRes.data)
         throw new Error(accountRes.error || "Failed to fetch account info");
       const account = accountRes.data;
@@ -114,7 +115,7 @@ export const portfolioPulse: Skill = {
         nonStableSymbols.map((sym) => {
           const pair = tickerMap.has(sym + "USDT") ? sym + "USDT" : null;
           if (!pair) return Promise.resolve({ success: true, data: [] as any[] });
-          return getTradeHistory(pair, binanceApiKey, binanceSecretKey, 500);
+          return getTradeHistory(pair, binanceApiKey, binanceSecretKey, 500, sessionId);
         }),
       );
 
@@ -424,12 +425,12 @@ export const portfolioPulse: Skill = {
         summary,
       };
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       return {
-        success: true,
+        success: false,
         data: { status: "unavailable", message: "Unable to fetch portfolio data" },
-        summary:
-          "Your Binance API keys may be missing or incorrect. Add them in Settings to view your portfolio.",
-        error: error instanceof Error ? error.message : String(error),
+        summary: `Unable to fetch portfolio data. Error: ${errMsg}. Please check that your Binance API keys have read permissions and no IP restrictions.`,
+        error: errMsg,
       };
     }
   },

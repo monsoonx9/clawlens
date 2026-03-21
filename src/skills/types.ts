@@ -14,12 +14,16 @@ export interface SkillParam {
 
 /** Runtime context passed to every skill execution. */
 export interface SkillContext {
+  sessionId?: string;
   apiKeys: {
     binanceApiKey: string;
     binanceSecretKey: string;
     llmProvider?: string;
     llmApiKey?: string;
     llmModel?: string;
+    llmBaseUrl?: string;
+    llmEndpoint?: string;
+    llmDeploymentName?: string;
     squareApiKey?: string;
   };
   portfolio?: PortfolioSnapshot;

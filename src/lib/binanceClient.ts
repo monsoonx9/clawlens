@@ -236,6 +236,7 @@ async function binanceFetch<T>(
   secret: string | null,
   params: Record<string, string | number> = {},
   requiresSign: boolean = false,
+  sessionId?: string,
 ): Promise<T> {
   // Clone params to avoid mutating the original
   const queryParams = { ...params };
@@ -287,7 +288,44 @@ async function binanceFetch<T>(
     });
   }
 
-  // Server-side: direct fetch to Binance
+  // Server-side: use proxy (to leverage Vercel's whitelisted IPs for Binance)
+  if (sessionId) {
+    return dedupedFetch<T>(
+      `proxy:${endpoint}:${JSON.stringify(queryParams)}:${sessionId}`,
+      queryParams,
+      async () => {
+        const response = await fetch("/api/binance/proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            endpoint,
+            apiKey,
+            method: "GET",
+            params: queryParams,
+            requiresSign,
+            sessionId,
+            signature,
+          }),
+        });
+
+        if (!response.ok) {
+          let errorMessage = `Proxy Error: ${response.status} ${response.statusText}`;
+          try {
+            const errorBody = await response.json();
+            if (errorBody.error) errorMessage = errorBody.error;
+            if (errorBody.msg) errorMessage = errorBody.msg;
+          } catch (e) {
+            console.warn("Failed to parse error response body:", e);
+          }
+          throw new Error(errorMessage);
+        }
+
+        return response.json() as Promise<T>;
+      },
+    );
+  }
+
+  // Server-side fallback: direct fetch to Binance (for cases without sessionId)
   const queryEntries = Object.entries(queryParams).map(
     ([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`,
   );
@@ -332,14 +370,23 @@ async function binanceFetch<T>(
  *
  * @param apiKey - Binance API key
  * @param secret - Binance API secret
+ * @param sessionId - Session ID for proxy routing (uses Vercel IPs)
  * @returns BinanceAccount with filtered non-zero balances
  */
 export async function getAccountInfo(
   apiKey: string,
   secret: string,
+  sessionId?: string,
 ): Promise<{ success: boolean; data?: BinanceAccount; error?: string }> {
   try {
-    const account = await binanceFetch<BinanceAccount>("/api/v3/account", apiKey, secret, {}, true);
+    const account = await binanceFetch<BinanceAccount>(
+      "/api/v3/account",
+      apiKey,
+      secret,
+      {},
+      true,
+      sessionId,
+    );
     account.balances = account.balances.filter(
       (b) => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0,
     );
@@ -447,6 +494,7 @@ export async function getTradeHistory(
   apiKey: string,
   secret: string,
   limit: number = 100,
+  sessionId?: string,
 ): Promise<{ success: boolean; data?: BinanceTrade[]; error?: string }> {
   try {
     const data = await binanceFetch<BinanceTrade[]>(
@@ -455,6 +503,7 @@ export async function getTradeHistory(
       secret,
       { symbol, limit },
       true,
+      sessionId,
     );
     return { success: true, data };
   } catch (error) {
@@ -476,9 +525,17 @@ export async function getTradeHistory(
 export async function getOpenOrders(
   apiKey: string,
   secret: string,
+  sessionId?: string,
 ): Promise<{ success: boolean; data?: BinanceOrder[]; error?: string }> {
   try {
-    const data = await binanceFetch<BinanceOrder[]>("/api/v3/openOrders", apiKey, secret, {}, true);
+    const data = await binanceFetch<BinanceOrder[]>(
+      "/api/v3/openOrders",
+      apiKey,
+      secret,
+      {},
+      true,
+      sessionId,
+    );
     return { success: true, data };
   } catch (error) {
     return {
@@ -499,6 +556,7 @@ export async function getOpenOrders(
 export async function testConnectivity(
   apiKey: string,
   secret: string,
+  sessionId?: string,
 ): Promise<{
   success: boolean;
   accountType: string;
@@ -507,7 +565,14 @@ export async function testConnectivity(
   permissions: string[];
 }> {
   try {
-    const account = await binanceFetch<BinanceAccount>("/api/v3/account", apiKey, secret, {}, true);
+    const account = await binanceFetch<BinanceAccount>(
+      "/api/v3/account",
+      apiKey,
+      secret,
+      {},
+      true,
+      sessionId,
+    );
 
     return {
       success: true,

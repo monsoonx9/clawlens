@@ -115,6 +115,9 @@ export async function POST(request: NextRequest) {
           llmProvider: apiKeys.llmProvider,
           llmApiKey: apiKeys.llmApiKey,
           llmModel: apiKeys.llmModel,
+          llmBaseUrl: apiKeys.llmBaseUrl,
+          llmEndpoint: apiKeys.llmEndpoint,
+          llmDeploymentName: apiKeys.llmDeploymentName,
           squareApiKey: apiKeys.squareApiKey,
         },
       };

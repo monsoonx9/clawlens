@@ -227,7 +227,7 @@ async function handleMessage(
   const { handleAIMessage } = await import("@/lib/telegram/messageHandler");
 
   if (text === "📊 Portfolio") {
-    await bot.sendMessage(chatId, "🤔 Fetching your portfolio...", getMainKeyboard());
+    await bot.sendTyping(chatId);
     const response = await handleAIMessage(
       chatId,
       config.sessionId,
@@ -269,7 +269,7 @@ async function handleMessage(
     return;
   }
 
-  await bot.sendMessage(chatId, "🤔 Thinking...", getMainKeyboard());
+  await bot.sendTyping(chatId);
   const response = await handleAIMessage(chatId, config.sessionId, text, firstName);
   await bot.sendMessage(chatId, response, getMainKeyboard());
 }
@@ -386,7 +386,7 @@ async function handleCommand(
 
     case "portfolio": {
       const { handleAIMessage } = await import("@/lib/telegram/messageHandler");
-      await bot.sendMessage(chatId, "🤔 Fetching your portfolio...", getMainKeyboard());
+      await bot.sendTyping(chatId);
       const response = await handleAIMessage(
         chatId,
         sessionId,
@@ -406,11 +406,7 @@ async function handleCommand(
         );
       } else {
         const { handleAIMessage } = await import("@/lib/telegram/messageHandler");
-        await bot.sendMessage(
-          chatId,
-          `🤔 Fetching price for ${args.toUpperCase()}...`,
-          getMainKeyboard(),
-        );
+        await bot.sendTyping(chatId);
         const response = await handleAIMessage(
           chatId,
           sessionId,
@@ -454,7 +450,7 @@ async function handleCommand(
         break;
       }
       const { handleAIMessage } = await import("@/lib/telegram/messageHandler");
-      await bot.sendMessage(chatId, "🤔 Thinking...", getMainKeyboard());
+      await bot.sendTyping(chatId);
       const response = await handleAIMessage(chatId, sessionId, args.trim(), firstName);
       await bot.sendMessage(chatId, response, getMainKeyboard());
       break;

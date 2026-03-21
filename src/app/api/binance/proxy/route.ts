@@ -127,7 +127,9 @@ function checkRateLimit(identifier: string): boolean {
 }
 
 function getSessionId(request: NextRequest): string | null {
-  return request.cookies.get("clawlens_session")?.value || request.headers.get("x-session-id");
+  return (
+    request.cookies.get("clawlens_session")?.value || request.headers.get("x-session-id") || null
+  );
 }
 
 const PUBLIC_BINANCE_DOMAINS = [
@@ -146,10 +148,10 @@ function isPublicEndpoint(baseUrl: string): boolean {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { baseUrl = "api.binance.com" } = body;
+  const { baseUrl = "api.binance.com", sessionId: bodySessionId } = body;
 
   const isPublic = isPublicEndpoint(baseUrl);
-  const sessionId = getSessionId(req);
+  const sessionId = getSessionId(req) || bodySessionId || null;
 
   // Only require session for authenticated endpoints
   if (!isPublic && !sessionId) {

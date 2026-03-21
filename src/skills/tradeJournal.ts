@@ -55,6 +55,7 @@ export const tradeJournal: Skill = {
   async execute(input: Record<string, unknown>, context: SkillContext): Promise<SkillResult> {
     try {
       const { binanceApiKey, binanceSecretKey } = context.apiKeys;
+      const { sessionId } = context;
       let symbols = (input.symbols || []) as string[];
 
       // If no symbols provided, try to derive from portfolio
@@ -75,7 +76,9 @@ export const tradeJournal: Skill = {
 
       // ── Step 1: Fetch all trade history ──
       const allTradeResults = await Promise.allSettled(
-        symbols.map((sym) => getTradeHistory(sym, binanceApiKey, binanceSecretKey, 1000)),
+        symbols.map((sym) =>
+          getTradeHistory(sym, binanceApiKey, binanceSecretKey, 1000, sessionId),
+        ),
       );
 
       const allTrades: Array<{ symbol: string; trade: BinanceTrade }> = [];

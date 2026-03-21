@@ -37,7 +37,13 @@ async function squarePostRequest(
   apiKey: string,
   sessionId?: string,
 ): Promise<SquarePostResult> {
-  const proxyResponse = await fetch("/api/binance/proxy", {
+  // Use absolute URL on server-side, relative on client-side
+  const isBrowser = typeof window !== "undefined";
+  const proxyUrl = isBrowser
+    ? "/api/binance/proxy"
+    : `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/binance/proxy`;
+
+  const proxyResponse = await fetch(proxyUrl, {
     method: "POST",
     credentials: "include",
     headers: {

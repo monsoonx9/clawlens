@@ -116,6 +116,7 @@ export default function AssistantPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamingContentRef = useRef("");
+  const justCreatedSessionRef = useRef<string | null>(null);
 
   const loadPersonality = useCallback(async () => {
     try {
@@ -184,6 +185,11 @@ export default function AssistantPage() {
     if (!sessionsLoadedRef.current) return;
     if (activeSession) {
       activeSessionRef.current = activeSession;
+      // Skip loading messages for just-created sessions (they have none yet)
+      if (justCreatedSessionRef.current === activeSession.sessionId) {
+        justCreatedSessionRef.current = null;
+        return;
+      }
       loadMessages(activeSession.sessionId);
     }
   }, [activeSession, loadMessages]);
@@ -235,6 +241,7 @@ export default function AssistantPage() {
       });
       const data = await res.json();
       if (data.session) {
+        justCreatedSessionRef.current = data.session.sessionId;
         setSessions([data.session, ...sessions]);
         setActiveSession(data.session);
         return data.session;

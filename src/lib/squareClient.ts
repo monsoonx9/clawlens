@@ -58,8 +58,14 @@ export async function postToSquare(content: string, apiKey: string): Promise<Squ
   }
 
   try {
+    // Use absolute URL on server-side, relative on client-side
+    const isBrowser = typeof window !== "undefined";
+    const proxyUrl = isBrowser
+      ? "/api/binance/proxy"
+      : `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/binance/proxy`;
+
     // Use proxy instead of direct call to avoid CORS
-    const response = await fetch("/api/binance/proxy", {
+    const response = await fetch(proxyUrl, {
       method: "POST",
       credentials: "include",
       headers: {

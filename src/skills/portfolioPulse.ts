@@ -426,6 +426,8 @@ export const portfolioPulse: Skill = {
       };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
+      const isConnectionError =
+        errMsg.includes("URL") || errMsg.includes("parse") || errMsg.includes("ECONNREFUSED");
       return {
         success: false,
         data: {
@@ -433,7 +435,9 @@ export const portfolioPulse: Skill = {
           message: "Unable to fetch portfolio data",
           error: errMsg,
         },
-        summary: `[ERROR] Could not retrieve portfolio data from Binance. Error: ${errMsg}. This means either the API keys lack read permissions, there are IP restrictions, or Binance is blocking the connection.`,
+        summary: isConnectionError
+          ? `[ERROR] Could not connect to the Binance API proxy. Error: ${errMsg}. This is a server configuration issue, not an API key problem.`
+          : `[ERROR] Could not retrieve portfolio data from Binance. Error: ${errMsg}. This may mean the API keys lack read permissions, there are IP restrictions, or Binance is blocking the connection.`,
         error: errMsg,
       };
     }

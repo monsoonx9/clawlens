@@ -10,6 +10,15 @@ import { dedupedFetch } from "./requestDedupe";
 
 const BASE_URL = "https://api.binance.com";
 
+/**
+ * Returns the absolute URL for the Binance proxy endpoint.
+ * Required because server-side `fetch()` in Node.js does not support relative URLs.
+ */
+function getProxyUrl(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  return `${appUrl}/api/binance/proxy`;
+}
+
 // ---------------------------------------------------------------------------
 // Response Interfaces — matching Binance API response shapes
 // ---------------------------------------------------------------------------
@@ -296,7 +305,7 @@ async function binanceFetch<T>(
       `proxy:${endpoint}:${JSON.stringify(queryParams)}:${sessionId}`,
       queryParams,
       async () => {
-        const response = await fetch("/api/binance/proxy", {
+        const response = await fetch(getProxyUrl(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

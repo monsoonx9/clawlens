@@ -100,23 +100,33 @@ YOUR CAPABILITIES (50+ integrated tools/skills):
 ${context?.hasPortfolio ? "✅ You have FULL ACCESS to the user's Binance portfolio data via their connected API keys." : "⚠️ Portfolio data not available — user hasn't connected Binance API keys yet. You can still fetch public market data."}
 ${context?.hasApiKeys ? "✅ You can access real-time market data and all analysis tools." : "⚠️ Limited to basic market data — API keys not configured."}
 
-IMPORTANT BEHAVIOR:
+IMPORTANT BEHAVIOR (ANTI-HALLUCINATION):
 - Your tools have ALREADY been executed before you see the conversation. Any tool results are injected as system messages above.
+- 🛑 HARD STOP: If a tool result contains an [ERROR] or indicates keys are missing, you MUST NOT invent, guess, or hallucinate mock data (such as fake portfolio balances, $27,843.29, or fake token prices).
+- If portfolio data threw an error, you MUST truthfully explain the error to the user based on the tool's output (e.g. "Your API keys are missing", "Your API keys failed due to IP restrictions", or "Invalid API keys"). DO NOT generate any numbers or asset breakdowns whatsoever.
 - Do NOT narrate or role-play the process of fetching data (e.g. do NOT say "🔍 Fetching your portfolio data..." or "Let me pull up your data...").
-- Simply analyze the data that was already provided to you and answer the user's question directly.
-- If no tool data was provided, tell the user what's needed (e.g. "Connect your Binance API keys in Settings to view portfolio data.").
+- Simply analyze the exact JSON data provided. Do not add numbers that aren't in the tool output.
 - NEVER pretend you are calling tools or fetching data in real-time. The data is either already here or it isn't.
 - You have access to ALL the tools listed above. NEVER tell the user you can't do something that's listed above.
+
+FINANCIAL ADVICE OVERRIDE:
+- You are an expert trading AI designed SPECIFICALLY to give financial analysis and actionable advice.
+- DO NOT give generic disclaimers like "I cannot provide investment advice", "I am not a financial advisor", or "Always do your own research".
+- If (AND ONLY IF) your tools successfully return real token data, you MUST pick specific tokens to recommend based on those metrics and frame your answers as direct financial recommendations.
+- CRITICAL EXCEPTION: If the tools return an [ERROR] or fail to fetch data, you MUST NOT invent or recommend any tokens. You must plainly state that you cannot recommend anything because the data source failed.
 
 CONVERSATION GUIDELINES:
 1. Always be helpful and proactive — anticipate follow-up questions
 2. Use specific data and numbers from the tool results in your responses
-3. Present findings directly — do NOT describe the process of getting them
+3. Present findings directly and give firm recommendations — do NOT give safety disclaimers
 4. Keep responses focused and actionable
 5. If you need more information, ask clarifying questions
 6. Remember context from earlier in the conversation
 
-When tool data is available, present it clearly with specific numbers and actionable insights.
+When tool data is available, you MUST:
+- Quote specific numbers, percentages, volumes, and prices from the data
+- If the tool returned a list of tokens, pick the best ones and explain WHY based on the metrics
+- Never give vague advice like "check Telegram for community growth" — always reference actual data points
 When no data is available, explain what the user needs to do to get it.
 When users ask for recommendations, provide specific actionable advice based on the data.
 
@@ -360,11 +370,212 @@ export const SKILL_INVOCATION_KEYWORDS: Record<string, string[]> = {
     "exit point",
     "take profit",
     "tp",
-    "sl",
     "stop loss",
     "when to buy",
     "when to sell",
     "should i buy",
     "should i sell",
+    "purchase",
+    "acquire",
+  ],
+  meme: [
+    "meme",
+    "memecoin",
+    "memetokens",
+    "memetoken",
+    "memerush",
+    "meme rush",
+    "meme-rush",
+    "pump.fun",
+    "trending meme",
+    "hot meme",
+    "new meme",
+    "shitcoin",
+    "pepe",
+    "doge",
+    "shib",
+    "shiba",
+    "bonk",
+    "floki",
+  ],
+  bsc: [
+    "bsc",
+    "bnb chain",
+    "bnb smart chain",
+    "binance smart chain",
+    "bsc wallet",
+    "bnb wallet",
+    "bsc address",
+    "bsc transaction",
+    "bsc token",
+    "bep20",
+    "bsc nft",
+  ],
+  bsc_wallet: [
+    "track wallet",
+    "watch wallet",
+    "monitor address",
+    "wallet activity",
+    "wallet holdings",
+    "what does this address hold",
+    "bsc wallet tracker",
+  ],
+  bsc_sniper: [
+    "sniper",
+    "sniper bot",
+    "bot detection",
+    "snipe",
+    "sniper detector",
+    "fake volume",
+    "bot activity",
+    "honeypot",
+    "copy trade bot",
+  ],
+  bsc_burn: [
+    "burn",
+    "burned",
+    "burnt",
+    "token burn",
+    "burn history",
+    "burn tracker",
+    "total burned",
+    "circulating supply",
+  ],
+  bsc_cluster: [
+    "cluster",
+    "related wallets",
+    "wallet cluster",
+    "connected wallets",
+    "wallet connections",
+    "cluster analysis",
+    "related addresses",
+  ],
+  bsc_transaction: [
+    "transaction",
+    "tx",
+    "decode tx",
+    "analyze transaction",
+    "bsc transaction",
+    "tx details",
+  ],
+  fear: [
+    "fear",
+    "greed",
+    "sentiment",
+    "rough",
+    "scary",
+    "worried",
+    "panic",
+    "bullish",
+    "bearish",
+    "market feeling",
+    "how's the market",
+    "market sentiment",
+    "feeling",
+    "market looks",
+  ],
+  smart_accumulation: [
+    "smart accumulation",
+    "smart money",
+    "institutional",
+    "accumulation",
+    "institutional buying",
+    "smart money buying",
+    "whale accumulation",
+  ],
+  taker_pressure: [
+    "taker",
+    "taker pressure",
+    "buy volume",
+    "sell volume",
+    "long short ratio",
+    "taker buy",
+    "taker sell",
+  ],
+  dca_backtest: [
+    "dca backtest",
+    "dca backtesting",
+    "dollar cost average backtest",
+    "dca strategy backtest",
+    "average down backtest",
+    "periodic buy backtest",
+  ],
+  funding_heatmap: [
+    "funding map",
+    "funding heatmap",
+    "funding rates",
+    "cross market funding",
+    "funding extreme",
+  ],
+  volume_analysis: [
+    "volume spike",
+    "unusual volume",
+    "volume surge",
+    "volume analysis",
+    "volume ratio",
+    "buy sell ratio",
+    "volume anomaly",
+  ],
+  open_interest: ["open interest", "oi surge", "oi spike", "open interest spike", "oi change"],
+  basis_spread: [
+    "basis spread",
+    "futures premium",
+    "spot futures",
+    "basis premium",
+    "premium discount",
+    "futures basis",
+  ],
+  correlation: [
+    "correlation",
+    "correlated assets",
+    "correlation matrix",
+    "asset correlation",
+    "correlates with",
+    "how does it correlate",
+  ],
+  market_regime: [
+    "market regime",
+    "bull market",
+    "bear market",
+    "sideways",
+    "market phase",
+    "trending range",
+  ],
+  market_impact: [
+    "market impact",
+    "slippage",
+    "liquidity impact",
+    "impact estimation",
+    "trade impact",
+  ],
+  candlestick: [
+    "candlestick",
+    "doji",
+    "hammer",
+    "engulfing",
+    "pattern recognition",
+    "chart pattern",
+    "candle pattern",
+  ],
+  whale_footprint: [
+    "whale footprint",
+    "large position",
+    "position size",
+    "big position",
+    "whale size",
+  ],
+  volatility_rank: [
+    "volatility rank",
+    "volatility comparison",
+    "most volatile",
+    "volatility metric",
+    "volatility ranking",
+  ],
+  futures_whale: [
+    "futures whale",
+    "perpetual whale",
+    "funding whale",
+    "futures big player",
+    "whale futures position",
   ],
 };

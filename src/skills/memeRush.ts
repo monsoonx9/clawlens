@@ -211,10 +211,10 @@ export const memeRush: Skill = {
     } catch (error) {
       console.warn("[memeRush] API failed:", error);
       return {
-        success: true,
+        success: false,
         data: { status: "unavailable", error: "API unavailable" },
         summary:
-          "Meme rush data unavailable - Binance Web3 API temporarily offline. Check internet connection or try again later.",
+          "[ERROR] Meme rush data unavailable - Binance Web3 API temporarily offline. Check internet connection or try again later.",
         error: error instanceof Error ? error.message : String(error),
       };
     }

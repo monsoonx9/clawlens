@@ -111,9 +111,16 @@ export async function handleAIMessage(
     const history = await getChatHistory(chatId);
     const lastInvokedSkills = await getLastInvokedSkills(chatId);
 
-    // ── Fix 4: Pass priorMessages and lastInvokedSkills to analyzeIntent ──
+    // ── LLM-Powered Intent Classification ──
     const priorMessages = history.map((m) => ({ role: m.role, content: m.content }));
-    const skillInvocations = skillRouter.analyzeIntent(userMessage, {
+    const skillInvocations = await skillRouter.analyzeIntentSmart(userMessage, {
+      llmProvider: apiKeys.llmProvider,
+      llmApiKey: apiKeys.llmApiKey,
+      llmModel: apiKeys.llmModel,
+      llmBaseUrl: apiKeys.llmBaseUrl,
+      llmEndpoint: apiKeys.llmEndpoint,
+      llmDeploymentName: apiKeys.llmDeploymentName,
+    }, {
       priorMessages,
       lastInvokedSkills,
     });
@@ -140,7 +147,26 @@ export async function handleAIMessage(
       };
 
       const skillOutput = await skillRouter.executeSkills(skillInvocations, skillContext);
-      skillResults = skillOutput.results.map((r) => r.summary || JSON.stringify(r.data, null, 2));
+      skillResults = skillOutput.results.map((r) => {
+        const dataObj = r.data as Record<string, any> | undefined;
+        const hasErrorState = 
+          !r.success || 
+          dataObj?.status === "unavailable" || 
+          dataObj?.status === "error" || 
+          (r.summary && r.summary.toLowerCase().includes("unavailable")) ||
+          dataObj?.error !== undefined;
+          
+        let text = "";
+        if (hasErrorState) {
+          text = r.summary ? r.summary : JSON.stringify(r.data);
+          text = `[ERROR: TOOL EXECUTION FAILED] ${text}\n🛑 CRITICAL INSTRUCTION TO AI: DO NOT INVENT OR HALLUCINATE DATA. TELL THE USER THE TOOL FAILED.`;
+        } else {
+          text = r.summary 
+            ? `${r.summary}\n\nDATA FETCHED:\n${JSON.stringify(r.data)}` 
+            : JSON.stringify(r.data);
+        }
+        return text;
+      });
       skillsUsed = skillOutput.skillsUsed;
       failedSkills = skillOutput.failedSkills;
     }

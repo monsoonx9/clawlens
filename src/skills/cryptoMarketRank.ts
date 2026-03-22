@@ -311,9 +311,9 @@ export const cryptoMarketRank: Skill = {
       };
     } catch (error) {
       return {
-        success: true,
+        success: false,
         data: { status: "unavailable", message: "Unable to fetch market rankings" },
-        summary: "Market rankings unavailable. Check your API keys or try again later.",
+        summary: "[ERROR] Market rankings unavailable. Check your API keys, internet connection, or try again later.",
         error: error instanceof Error ? error.message : String(error),
       };
     }

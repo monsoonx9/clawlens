@@ -96,7 +96,14 @@ export async function POST(request: NextRequest) {
     // Get last invoked skills from session for follow-up detection
     const lastInvokedSkills = await chatManager.getLastInvokedSkills(activeSessionId);
 
-    const skillInvocations = skillRouter.analyzeIntent(message, {
+    const skillInvocations = await skillRouter.analyzeIntentSmart(message, {
+      llmProvider: apiKeys.llmProvider,
+      llmApiKey: apiKeys.llmApiKey,
+      llmModel: apiKeys.llmModel,
+      llmBaseUrl: apiKeys.llmBaseUrl,
+      llmEndpoint: apiKeys.llmEndpoint,
+      llmDeploymentName: apiKeys.llmDeploymentName,
+    }, {
       priorMessages,
       lastInvokedSkills,
     });
@@ -122,7 +129,28 @@ export async function POST(request: NextRequest) {
       };
 
       const skillOutput = await skillRouter.executeSkills(skillInvocations, skillContext);
-      skillResults = skillOutput.results.map((r) => r.summary || JSON.stringify(r.data, null, 2));
+      skillResults = skillOutput.results.map((r) => {
+        const dataObj = r.data as Record<string, any> | undefined;
+        const hasErrorState = 
+          !r.success || 
+          dataObj?.status === "unavailable" || 
+          dataObj?.status === "error" || 
+          (r.summary && r.summary.toLowerCase().includes("unavailable")) ||
+          dataObj?.error !== undefined;
+          
+        let text = "";
+        if (hasErrorState) {
+          text = r.summary ? r.summary : JSON.stringify(r.data);
+          text = `[ERROR: TOOL EXECUTION FAILED] ${text}\n🛑 CRITICAL INSTRUCTION TO AI: DO NOT INVENT OR HALLUCINATE DATA. TELL THE USER THE TOOL FAILED.`;
+        } else {
+          // Pass both the human-readable summary AND the raw JSON data back to the LLM. 
+          // Previously, `r.summary || JSON.stringify` was discarding the entire JSON payload!
+          text = r.summary 
+            ? `${r.summary}\n\nDATA FETCHED:\n${JSON.stringify(r.data)}` 
+            : JSON.stringify(r.data);
+        }
+        return text;
+      });
       skillsUsed = skillOutput.skillsUsed;
       failedSkills = skillOutput.failedSkills;
 

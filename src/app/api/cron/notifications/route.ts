@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { notificationService } from "@/lib/telegram/notificationService";
 import { getSkill } from "@/skills";
+import { getKeys } from "@/lib/keyVault";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -156,8 +157,23 @@ async function sendPortfolioDigest(): Promise<void> {
       const skill = getSkill("claw-council/portfolio-pulse");
       if (!skill) continue;
 
-      const apiKeys = await getUserApiKeys(user.user_id);
-      if (!apiKeys?.binanceApiKey) continue;
+      const keys = await getKeys(user.user_id);
+      if (!keys?.binanceApiKey) {
+        console.warn(`[Cron] No API keys found for user ${user.user_id}`);
+        continue;
+      }
+
+      const apiKeys = {
+        binanceApiKey: keys.binanceApiKey,
+        binanceSecretKey: keys.binanceSecretKey,
+        llmApiKey: keys.llmApiKey,
+        llmProvider: keys.llmProvider,
+        llmModel: keys.llmModel,
+        llmBaseUrl: keys.llmBaseUrl,
+        llmEndpoint: keys.llmEndpoint,
+        llmDeploymentName: keys.llmDeploymentName,
+        squareApiKey: keys.squareApiKey,
+      };
 
       const result = await skill.execute({}, { sessionId: user.user_id, apiKeys });
 
@@ -261,30 +277,6 @@ async function getRecentWhaleActivity(): Promise<
     return [];
   } catch {
     return [];
-  }
-}
-
-async function getUserApiKeys(userId: string): Promise<{
-  binanceApiKey: string;
-  binanceSecretKey: string;
-} | null> {
-  try {
-    const { data } = await supabase
-      .from("encrypted_keys")
-      .select("encrypted_data")
-      .eq("user_id", userId)
-      .single();
-
-    if (!data) return null;
-
-    const { decryptKeys } = await import("@/lib/keyVault");
-    const keys = await decryptKeys(data.encrypted_data);
-    return {
-      binanceApiKey: keys.binanceApiKey || "",
-      binanceSecretKey: keys.binanceSecretKey || "",
-    };
-  } catch {
-    return null;
   }
 }
 

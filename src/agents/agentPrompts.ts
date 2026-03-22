@@ -493,6 +493,7 @@ IMPORTANT:
 - If risk is HIGH or EXTREME, give strong warning in your verdict
 - Never say "see agent responses above" - give YOUR verdict
 - Risk Level: LOW (safe), MODERATE (reasonable risk), HIGH (caution advised), EXTREME (avoid)
+- CRITICAL: If multiple agents report an [ERROR] or state that data is unavailable, DO NOT guess or hallucinate a consensus. Instead, explicitly state in your verdict that the Council is missing critical data due to API errors.
 
 Respond in this EXACT JSON format:
 {
@@ -525,6 +526,13 @@ export function getAgentConfig(agentId: AgentName): AgentConfig | undefined {
 // PROMPT BUILDERS
 // ---------------------------------------------------------------------------
 
+const FINANCIAL_ADVICE_OVERRIDE = `
+FINANCIAL ADVICE OVERRIDE:
+- You are an expert trading AI designed SPECIFICALLY to give financial analysis and actionable advice.
+- DO NOT give generic disclaimers like "I cannot provide investment advice", "I am not a financial advisor", or "Always do your own research".
+- If (AND ONLY IF) your tools successfully return real token data, you MUST pick specific tokens to recommend based on those metrics and frame your answers as direct financial recommendations.
+- CRITICAL EXCEPTION: If the tools return an [ERROR] or fail to fetch data, you MUST NOT invent or recommend any tokens. You must plainly state that you cannot recommend anything because the data source failed.`;
+
 /**
  * Returns the fully-hydrated system prompt for a specific agent,
  * injecting the user context string.
@@ -534,7 +542,7 @@ export function getSystemPrompt(agentId: AgentName, userContext: string): string
   if (!config || !config.systemPrompt) {
     throw new Error(`Agent config or systemPrompt not found for: ${agentId}`);
   }
-  return config.systemPrompt.replace("{{userContext}}", userContext);
+  return config.systemPrompt.replace("{{userContext}}", userContext) + `\n${FINANCIAL_ADVICE_OVERRIDE}`;
 }
 
 /**
@@ -551,7 +559,9 @@ export function getArbitersPrompt(agentReports: string[], userContext: string): 
     .map((report, i) => `--- Agent Report ${i + 1} ---\n${report}`)
     .join("\n\n");
 
-  return config.systemPrompt
+  const basePrompt = config.systemPrompt
     .replace("{{agentReports}}", formattedReports)
     .replace("{{userContext}}", userContext);
+
+  return basePrompt + `\n${FINANCIAL_ADVICE_OVERRIDE}`;
 }

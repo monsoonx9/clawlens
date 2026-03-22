@@ -1,5 +1,5 @@
 import { getSkill } from "@/skills";
-import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { getKeys } from "@/lib/keyVault";
 
 interface TelegramSkillContext {
   userId: string;
@@ -15,8 +15,6 @@ export interface SkillResult {
 }
 
 export class TelegramSkillService {
-  private supabase = getSupabaseAdmin();
-
   async execute(
     skillId: string,
     params: Record<string, unknown>,
@@ -28,7 +26,24 @@ export class TelegramSkillService {
         return { success: false, error: `Skill not found: ${skillId}` };
       }
 
-      const apiKeys = await this.getUserApiKeys(context.userId);
+      const lookupId = context.sessionId || context.userId;
+      const keys = await getKeys(lookupId);
+      const apiKeys = {
+        binanceApiKey: keys?.binanceApiKey || "",
+        binanceSecretKey: keys?.binanceSecretKey || "",
+        llmApiKey: keys?.llmApiKey,
+        llmProvider: keys?.llmProvider,
+        llmModel: keys?.llmModel,
+        llmBaseUrl: keys?.llmBaseUrl,
+        llmEndpoint: keys?.llmEndpoint,
+        llmDeploymentName: keys?.llmDeploymentName,
+        squareApiKey: keys?.squareApiKey,
+      };
+
+      if (!keys?.binanceApiKey) {
+        console.warn(`[TelegramSkillService] No API keys found for user ${lookupId}`);
+      }
+
       const skillContext = {
         sessionId: context.sessionId,
         userId: context.userId,
@@ -56,46 +71,6 @@ export class TelegramSkillService {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       };
-    }
-  }
-
-  private async getUserApiKeys(userId: string): Promise<{
-    binanceApiKey: string;
-    binanceSecretKey: string;
-    llmApiKey?: string;
-    llmProvider?: string;
-    llmModel?: string;
-    llmBaseUrl?: string;
-    llmEndpoint?: string;
-    llmDeploymentName?: string;
-    squareApiKey?: string;
-  }> {
-    try {
-      const { data } = await this.supabase
-        .from("encrypted_keys")
-        .select("encrypted_data")
-        .eq("user_id", userId)
-        .single();
-
-      if (!data) {
-        return { binanceApiKey: "", binanceSecretKey: "" };
-      }
-
-      const { decryptKeys } = await import("@/lib/keyVault");
-      const keys = await decryptKeys(data.encrypted_data);
-      return {
-        binanceApiKey: keys.binanceApiKey || "",
-        binanceSecretKey: keys.binanceSecretKey || "",
-        llmApiKey: keys.llmApiKey,
-        llmProvider: keys.llmProvider,
-        llmModel: keys.llmModel,
-        llmBaseUrl: keys.llmBaseUrl,
-        llmEndpoint: keys.llmEndpoint,
-        llmDeploymentName: keys.llmDeploymentName,
-        squareApiKey: keys.squareApiKey,
-      };
-    } catch {
-      return { binanceApiKey: "", binanceSecretKey: "" };
     }
   }
 

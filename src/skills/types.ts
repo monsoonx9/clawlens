@@ -15,6 +15,7 @@ export interface SkillParam {
 /** Runtime context passed to every skill execution. */
 export interface SkillContext {
   sessionId?: string;
+  userId?: string;
   apiKeys: {
     binanceApiKey: string;
     binanceSecretKey: string;

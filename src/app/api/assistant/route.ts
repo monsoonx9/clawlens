@@ -7,6 +7,21 @@ import { PersonalityEngine } from "@/lib/personalAssistant/personalityEngine";
 import { getPersonalAssistantSystemPrompt } from "@/agents/personalAssistant";
 import { getKeys } from "@/lib/keyVault";
 import { streamAgentResponse } from "@/lib/llmClient";
+import { PortfolioSnapshot, UserPreferences, AgentName, PortfolioAsset } from "@/types";
+import { portfolioPulse } from "@/skills";
+
+const DEFAULT_PREFERENCES: UserPreferences = {
+  riskTolerance: 5,
+  defaultInvestmentSize: 100,
+  maxPerTrade: 500,
+  maxPerToken: 1000,
+  enabledAgents: [
+    "SCOUT", "THE_WARDEN", "LENS", "SHADOW", "LEDGER",
+    "PULSE", "SAGE", "QUILL", "FUTURES", "BLAZE"
+  ],
+  watchlist: [],
+  whaleWallets: [],
+};
 
 function sseEvent(data: Record<string, unknown>): string {
   return `data: ${JSON.stringify(data)}\n\n`;
@@ -86,6 +101,49 @@ export async function POST(request: NextRequest) {
     const personality = userPreferences?.personality || "adaptive";
     const personalityEngine = new PersonalityEngine(personality);
 
+    // Context-Aware Personalization: Fetch Portfolio Snapshot
+    let portfolioSnapshot: PortfolioSnapshot | null = null;
+    if (apiKeys.binanceApiKey && apiKeys.binanceSecretKey) {
+      try {
+        const pulseResult = await portfolioPulse.execute({}, {
+          sessionId,
+          userId: sessionId,
+          apiKeys: {
+            binanceApiKey: apiKeys.binanceApiKey,
+            binanceSecretKey: apiKeys.binanceSecretKey,
+            llmProvider: apiKeys.llmProvider,
+            llmApiKey: apiKeys.llmApiKey,
+            llmModel: apiKeys.llmModel,
+            llmBaseUrl: apiKeys.llmBaseUrl,
+            llmEndpoint: apiKeys.llmEndpoint,
+            llmDeploymentName: apiKeys.llmDeploymentName,
+          }
+        });
+
+        if (pulseResult.success && pulseResult.data) {
+          const raw = pulseResult.data as Record<string, any>;
+          portfolioSnapshot = {
+            totalValueUSD: raw.totalValueUSD ?? 0,
+            totalPnlUSD: raw.totalPnlUSD ?? raw.totalUnrealizedPnLUSD ?? 0,
+            totalPnlPercent: raw.totalPnlPercent ?? raw.totalUnrealizedPnLPercent ?? 0,
+            change24hUSD: raw.change24hUSD ?? 0,
+            change24hPercent: raw.change24hPercent ?? 0,
+            riskScore: raw.riskScore ?? 0,
+            assets: (raw.assets as PortfolioAsset[]) ?? [],
+            lastUpdated: new Date(),
+          };
+        }
+      } catch (err) {
+        console.warn("[Assistant API] Failed to fetch portfolio pulse for context:", err);
+      }
+    }
+
+    // Merge preferences
+    const mergedPreferences: UserPreferences = {
+      ...DEFAULT_PREFERENCES,
+      // Assistant-specific overrides can be added here if we had them in Supabase
+    };
+
     const messages = await chatManager.getMessages(activeSessionId, sessionId);
 
     const priorMessages = messages.slice(-10).map((m) => ({
@@ -126,6 +184,8 @@ export async function POST(request: NextRequest) {
           llmDeploymentName: apiKeys.llmDeploymentName,
           squareApiKey: apiKeys.squareApiKey,
         },
+        portfolio: portfolioSnapshot || undefined,
+        preferences: mergedPreferences,
       };
 
       const skillOutput = await skillRouter.executeSkills(skillInvocations, skillContext);

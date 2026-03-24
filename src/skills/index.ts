@@ -42,6 +42,7 @@ import { volumeAnalysis } from "./volumeAnalysis";
 import { priceAlerts } from "./priceAlerts";
 import { exchangeStats } from "./exchangeStats";
 import { futuresData } from "./futuresData";
+import { marketHeatmap } from "./marketHeatmap";
 
 // ---------------------------------------------------------------------------
 // Skill Imports - BSC On-Chain Skills
@@ -134,6 +135,7 @@ export {
   fundingExtremes,
   fundingHistory,
   basisSpread,
+  marketHeatmap,
 };
 
 export const SKILL_INSTANCES: Record<string, Skill> = {
@@ -188,6 +190,7 @@ export const SKILL_INSTANCES: Record<string, Skill> = {
   fundingExtremes,
   fundingHistory,
   basisSpread,
+  marketHeatmap,
 };
 
 // ---------------------------------------------------------------------------
@@ -246,6 +249,7 @@ const ALL_SKILLS: Skill[] = [
   fundingExtremes,
   fundingHistory,
   basisSpread,
+  marketHeatmap,
 ];
 
 export const skillRegistry = new Map<string, Skill>(ALL_SKILLS.map((s) => [s.id, s]));

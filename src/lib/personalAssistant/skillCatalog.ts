@@ -105,17 +105,20 @@ EXAMPLES (these show how natural language maps to tools):
 {"query": "latest crypto news", "tools": [{"id": "claw-council/news-radar", "params": {}}]}
 {"query": "any news on BTC?", "tools": [{"id": "claw-council/news-radar", "params": {"symbol": "BTC"}}]}
 {"query": "what's this address?", "tools": [{"id": "claw-council/address-info", "params": {"address": "..."}}]}
+{"query": "market heatmap", "tools": [{"id": "claw-council/market-heatmap", "params": {}}]}
+{"query": "visualize top tokens", "tools": [{"id": "claw-council/market-heatmap", "params": {}}]}
 
 RULES:
 1. Pick 1-5 tools that BEST answer the user's query. If the user asks a broad question, you MUST select multiple complementary tools to provide a complete picture.
-2. Extract parameters from the message (token symbols, addresses, amounts). For BSC tools, extract contract addresses.
+2. Extract ALL relevant parameters from the message (symbol, address, amount, totalBudgetUSD, durationWeeks, interval_days, targetAsset, riskTolerance).
 3. If the user mentions a specific tool by name (e.g. "meme rush", "rug shield", "sniper detector"), ALWAYS include that tool.
 4. For general market questions ("what's hot", "trending"), use crypto-market-rank or meme-rush.
 5. For token-specific questions, include the relevant analysis tool AND query-token-info for price data.
 6. For questions about the user's own portfolio, holdings, or balances, use claw-council/portfolio-pulse.
 7. For implicit market sentiment ("looks rough", "feeling bearish", "market scared"), use fear-index.
 8. For BSC/BNB Chain questions about wallets, tokens, or contracts, use bsc/* tools.
-9. If you cannot determine what tool to use, return an empty tools array.
+9. For visual market overviews or heatmaps of the top assets, use claw-council/market-heatmap.
+10. If you cannot determine what tool to use, return an empty tools array.
 
 Respond with ONLY valid JSON, no markdown:
 {"tools":[{"id":"skill-id-here","params":{"key":"value"}}],"reasoning":"brief explanation"}`;

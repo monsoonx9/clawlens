@@ -63,6 +63,9 @@ export interface ArbitersVerdict {
   riskLevel: RiskLevel;
   finalVerdict: string;
   confidence: number;
+  agreement?: number;
+  hasConsensus?: boolean;
+  direction?: "positive" | "negative";
   watchThis: string;
   isStreaming: boolean;
   isComplete: boolean;

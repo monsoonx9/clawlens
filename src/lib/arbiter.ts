@@ -5,7 +5,9 @@ import {
   buildUserContext,
   getDefaultModel,
   optimizePromptForProvider,
+  callAgentOnce,
 } from "@/lib/llmClient";
+import { LLMProvider } from "@/types";
 import { getSkill, SkillContext, SKILL_INSTANCES } from "@/skills";
 import { councilAnalyzer } from "@/skills/councilAnalyzer";
 import { consensusDetector } from "@/skills/consensusDetector";
@@ -649,6 +651,60 @@ Respond with ONLY valid JSON, no markdown:
   return routeQuery(query, enabledAgents);
 }
 
+/**
+ * Uses an LLM to extract semantic parameters from the user query.
+ * This allows skills to be called with specific values (budgets, timeframes)
+ * instead of just symbols.
+ */
+export async function preprocessQueryParameters(
+  query: string,
+  context: SkillContext,
+): Promise<Record<string, any>> {
+  const { llmApiKey, llmProvider, llmModel } = context.apiKeys;
+  if (!llmApiKey || !llmProvider) return {};
+
+  const systemPrompt = `You are a parameter extraction AI for ClawLens. 
+Your job is to extract specific parameters from the user's crypto-related query to be used by various analytical skills.
+
+EXTRACT THESE IF PRESENT:
+- symbol: The main token symbol (e.g., "BTC", "ETH").
+- address: Any blockchain address (0x...).
+- amount: Numeric amount for trades or analysis.
+- totalBudgetUSD: Total budget for DCA or planning.
+- durationWeeks: Duration for a plan in weeks.
+- interval_days: Frequency of actions in days.
+- targetAsset: The asset being targeted for an action.
+- riskTolerance: 1-10 scale based on user's tone.
+
+Respond ONLY with valid JSON. If a parameter is not found, omit it.
+Example: "Plan a DCA for BTC with $1000 over 3 months" -> {"symbol": "BTC", "totalBudgetUSD": 1000, "durationWeeks": 12, "targetAsset": "BTC"}`;
+
+  try {
+    const result = await callAgentOnce(
+      systemPrompt,
+      `User query: "${query}"`,
+      llmProvider as LLMProvider,
+      {
+        apiKey: llmApiKey,
+        baseUrl: context.apiKeys.llmBaseUrl,
+        endpoint: context.apiKeys.llmEndpoint,
+        deploymentName: context.apiKeys.llmDeploymentName,
+      },
+      llmModel || "gpt-5.4",
+      300,
+      true,
+    );
+
+    if (result.success && result.data) {
+      const cleaned = result.data.replace(/```json\n?|\n?```/g, "").trim();
+      return JSON.parse(cleaned);
+    }
+  } catch (error) {
+    console.warn("[Arbiter] Parameter preprocessing failed:", error);
+  }
+  return {};
+}
+
 // ---------------------------------------------------------------------------
 // 2. Skill Data Fetcher
 // ---------------------------------------------------------------------------
@@ -665,6 +721,7 @@ export async function fetchSkillData(
   agentId: AgentName,
   query: string,
   context: SkillContext,
+  preprocessedParams: Record<string, any> = {},
 ): Promise<string> {
   const agentConfig = AGENT_CONFIGS.find(a => a.id === agentId);
   if (!agentConfig || !agentConfig.relevantSkills || agentConfig.relevantSkills.length === 0) {
@@ -681,8 +738,8 @@ export async function fetchSkillData(
     return match ? match[1] : null;
   };
 
-  const symbol = extractSymbol(query) || (context.portfolio?.assets?.[0]?.symbol ?? "BTC");
-  const address = extractAddress(query);
+  const symbol = preprocessedParams.symbol || extractSymbol(query) || (context.portfolio?.assets?.[0]?.symbol ?? "BTC");
+  const address = preprocessedParams.address || extractAddress(query);
 
   const genericParams: Record<string, any> = {
     symbol,
@@ -690,13 +747,14 @@ export async function fetchSkillData(
     endpoint: "/api/v3/account",
     omitZeroBalances: true,
     action: "list",
-    targetAsset: symbol,
-    totalBudgetUSD: 500,
-    durationWeeks: 12,
-    riskTolerance: 5,
-    amount_per_interval: 100,
-    interval_days: 7,
-    total_days: 365,
+    targetAsset: preprocessedParams.targetAsset || symbol,
+    totalBudgetUSD: preprocessedParams.totalBudgetUSD || 500,
+    durationWeeks: preprocessedParams.durationWeeks || 12,
+    riskTolerance: preprocessedParams.riskTolerance || 5,
+    amount_per_interval: preprocessedParams.amount || 100,
+    interval_days: preprocessedParams.interval_days || 7,
+    total_days: (preprocessedParams.durationWeeks || 52) * 7,
+    ...preprocessedParams, // Spread remaining extracted params
   };
 
   const results: string[] = [];
@@ -1018,6 +1076,7 @@ export async function runCouncilDebate(params: RunCouncilDebateParams): Promise<
     totalRounds: number,
     allPreviousReports: string[],
     skillDataCache: Map<string, string>,
+    preprocessedParams: Record<string, any> = {},
   ): Promise<{ fullResponse: string; councilReport: string } | null> => {
     if (params.signal?.aborted) return null;
 
@@ -1027,7 +1086,7 @@ export async function runCouncilDebate(params: RunCouncilDebateParams): Promise<
       // Use cached skill data or fetch fresh
       let skillData = skillDataCache.get(agentId);
       if (!skillData) {
-        skillData = await fetchSkillData(agentId, query, skillContext);
+        skillData = await fetchSkillData(agentId, query, skillContext, preprocessedParams);
         skillDataCache.set(agentId, skillData);
       }
 
@@ -1126,6 +1185,12 @@ Focus on: WHAT should the user DO?`;
   const collectedReports: string[] = [];
   const skillDataCache = new Map<string, string>();
 
+  // Use LLM to extract semantic parameters once per debate
+  const preprocessedParams = await preprocessQueryParameters(query, skillContext);
+  if (Object.keys(preprocessedParams).length > 0) {
+    console.log("[Council] Preprocessed params:", preprocessedParams);
+  }
+
   const countQueryTopics = (q: string): number => {
     const topicKeywords = [
       "portfolio",
@@ -1217,7 +1282,7 @@ Focus on: WHAT should the user DO?`;
 
     // PARALLEL: Run all agents in this round concurrently
     const roundPromises = relevantAgents.map((agentId) =>
-      runAgent(agentId, round, MAX_ROUNDS, collectedReports, skillDataCache),
+      runAgent(agentId, round, MAX_ROUNDS, collectedReports, skillDataCache, preprocessedParams),
     );
 
     const results = await Promise.allSettled(roundPromises);
@@ -1274,6 +1339,7 @@ Focus on: WHAT should the user DO?`;
 
   // 6a. Run meta-skills for THE_ARBITER to better understand the reports
   let metaSkillContext = "";
+  let consensusDataRaw: any = null;
 
   try {
     // Extract agent names from collected reports
@@ -1321,7 +1387,7 @@ Focus on: WHAT should the user DO?`;
 
     // Run verdictSynthesizer
     // REUSE consensusResult from line 2097 to avoid duplicate call
-    const consensusDataRaw = consensusResult.success ? (consensusResult.data as any) : null;
+    consensusDataRaw = consensusResult.success ? (consensusResult.data as any) : null;
     const synthesizerResult = await verdictSynthesizer.execute(
       {
         query,
@@ -1381,8 +1447,17 @@ Focus on: WHAT should the user DO?`;
     try {
       const parsed: Omit<ArbitersVerdict, "isStreaming" | "isComplete"> =
         JSON.parse(cleanedResponse);
+      
+      // Inject meta-consensus data if available from the detector
+      const consensusAgreement = consensusDataRaw?.consensus?.agreement;
+      const consensusType = consensusDataRaw?.consensus?.type;
+      const hasConsensus = consensusType === "consensus" || (consensusAgreement && consensusAgreement >= 70);
+      
       verdict = {
         ...parsed,
+        agreement: consensusAgreement ? consensusAgreement / 100 : undefined,
+        hasConsensus: hasConsensus,
+        direction: consensusDataRaw?.consensus?.consensusDirection,
         isStreaming: false,
         isComplete: true,
       };

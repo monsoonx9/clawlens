@@ -19,6 +19,7 @@ import { useReducedMotion, getTransition } from "@/hooks/useReducedMotion";
 import { SquarePostModal } from "@/components/square/SquarePostModal";
 import { formatVerdictAsSquarePost } from "@/lib/squareClient";
 import html2canvas from "html2canvas";
+import { ConsensusGauge } from "./ConsensusGauge";
 
 interface ArbitersVerdictCardProps {
   verdict: ArbitersVerdict | null;
@@ -132,12 +133,26 @@ export function ArbitersVerdictCard({
 
         {/* Consensus */}
         <div className="mt-5">
-          <div className="text-text-muted text-xs uppercase tracking-widest font-bold mb-2">
+          <div className="text-text-muted text-xs uppercase tracking-widest font-bold mb-4">
             Council Consensus
           </div>
-          <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap">
-            {verdict.consensus}
-          </p>
+          <div className="flex flex-col md:flex-row gap-6 items-center md:items-start bg-[color-mix(in_srgb,var(--color-card),transparent_40%)] p-5 rounded-2xl border border-card-border shadow-inner">
+            {verdict.agreement !== undefined && (
+              <div className="shrink-0">
+                <ConsensusGauge 
+                  agreement={verdict.agreement} 
+                  hasConsensus={!!verdict.hasConsensus} 
+                  direction={verdict.direction}
+                  size="md"
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap italic">
+                {verdict.consensus}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="border-t border-card-border mt-5" />

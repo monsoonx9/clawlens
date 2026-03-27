@@ -8,6 +8,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { motion } from "framer-motion";
+import { useCallback, useRef } from "react";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -18,6 +19,66 @@ const navItems = [
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "History", href: "/history", icon: Clock },
 ];
+
+function NavItem({
+  item,
+  isActive,
+}: {
+  item: (typeof navItems)[number];
+  isActive: boolean;
+}) {
+  const ref = useRef<HTMLAnchorElement>(null);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (!ref.current || isActive) return;
+      const rect = ref.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      ref.current.style.setProperty("--spot-x", `${x}px`);
+      ref.current.style.setProperty("--spot-y", `${y}px`);
+    },
+    [isActive],
+  );
+
+  return (
+    <Link
+      ref={ref}
+      href={item.href}
+      onMouseMove={handleMouseMove}
+      className={twMerge(
+        clsx(
+          "group relative flex items-center gap-3 px-3 lg:px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 justify-center lg:justify-start touch-target overflow-hidden",
+          isActive
+            ? "bg-[color-mix(in_srgb,var(--color-accent),transparent_90%)] text-accent backdrop-blur-md"
+            : "text-text-secondary hover:text-text-primary",
+        ),
+      )}
+      title={item.name}
+    >
+      {isActive && (
+        <motion.div
+          layoutId="activeNav"
+          className="absolute inset-0 bg-[color-mix(in_srgb,var(--color-accent),transparent_90%)] rounded-full border border-[color-mix(in_srgb,var(--color-accent),transparent_80%)]"
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+        />
+      )}
+      {/* Spotlight glow on hover (non-active items) */}
+      {!isActive && (
+        <span
+          className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background:
+              "radial-gradient(120px circle at var(--spot-x, 50%) var(--spot-y, 50%), color-mix(in srgb, var(--color-accent), transparent 85%), transparent 70%)",
+          }}
+          aria-hidden="true"
+        />
+      )}
+      <item.icon className="w-5 h-5 shrink-0 relative z-10" />
+      <span className="hidden lg:inline relative z-10">{item.name}</span>
+    </Link>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -56,31 +117,7 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={twMerge(
-                clsx(
-                  "relative flex items-center gap-3 px-3 lg:px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 justify-center lg:justify-start touch-target",
-                  isActive
-                    ? "bg-[color-mix(in_srgb,var(--color-accent),transparent_90%)] text-accent backdrop-blur-md"
-                    : "text-text-secondary hover:bg-card hover:text-text-primary",
-                ),
-              )}
-              title={item.name}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeNav"
-                  className="absolute inset-0 bg-[color-mix(in_srgb,var(--color-accent),transparent_90%)] rounded-full border border-[color-mix(in_srgb,var(--color-accent),transparent_80%)]"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-              <item.icon className="w-5 h-5 shrink-0 relative z-10" />
-              <span className="hidden lg:inline relative z-10">{item.name}</span>
-            </Link>
-          );
+          return <NavItem key={item.href} item={item} isActive={isActive} />;
         })}
       </nav>
 

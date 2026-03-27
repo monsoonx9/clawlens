@@ -68,6 +68,8 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <MouseReactiveBackground />
+          {/* Premium grain texture overlay */}
+          <div className="noise-overlay fixed inset-0 pointer-events-none z-[50] opacity-[0.03]" aria-hidden="true" />
           <ErrorBoundary>
             <ClientLayout>{children}</ClientLayout>
           </ErrorBoundary>

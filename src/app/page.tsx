@@ -39,7 +39,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto w-full min-h-screen scroll-smooth">
+    <div className="relative w-full min-h-screen scroll-smooth">
       {/* Background Mesh Gradient */}
       <div
         className="fixed inset-0 pointer-events-none z-0"

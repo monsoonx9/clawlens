@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { MobileNav } from "@/components/layout/MobileNav";
@@ -11,11 +12,25 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { CommandPaletteWithSuspense } from "@/components/ui/CommandPalette";
 import { AnalyticsProvider } from "@/components/ui/AnalyticsProvider";
 import { useHydration } from "@/store/useAppStore";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+
+const pageVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
+const reducedVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHydrated = useHydration();
   const [mounted, setMounted] = useState(false);
+  const prefersReduced = useReducedMotion();
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setMounted(true));
@@ -38,6 +53,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   }
 
   const isMarketing = pathname === "/" || pathname === "/onboarding";
+  const variants = prefersReduced ? reducedVariants : pageVariants;
 
   if (isMarketing) {
     return (
@@ -45,7 +61,18 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         <ToastProvider>
           <ErrorBoundary>
             <CommandPaletteWithSuspense />
-            <AnalyticsProvider>{children}</AnalyticsProvider>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                variants={variants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <AnalyticsProvider>{children}</AnalyticsProvider>
+              </motion.div>
+            </AnimatePresence>
           </ErrorBoundary>
         </ToastProvider>
       </NotificationProvider>
@@ -67,7 +94,18 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             <ToastProvider>
               <ErrorBoundary>
                 <CommandPaletteWithSuspense />
-                <AnalyticsProvider>{children}</AnalyticsProvider>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={pathname}
+                    variants={variants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  >
+                    <AnalyticsProvider>{children}</AnalyticsProvider>
+                  </motion.div>
+                </AnimatePresence>
               </ErrorBoundary>
             </ToastProvider>
           </main>

@@ -1,10 +1,11 @@
 import { LucideIcon } from "lucide-react";
+import { useCountUpCurrency } from "@/hooks/useCountUp";
 
 interface StatCardProps {
   icon: LucideIcon;
   iconColor: string;
   label: string;
-  value: React.ReactNode;
+  value: number | string;
   subtext: React.ReactNode;
   subtextColor?: string;
   subtextIcon?: LucideIcon;
@@ -21,6 +22,11 @@ export function StatCard({
   subtextIcon: SubIcon,
   isLoading,
 }: StatCardProps) {
+  const isNumeric = typeof value === "number";
+  const { formatted } = useCountUpCurrency(value as number);
+
+  const displayValue = isLoading ? "" : isNumeric ? formatted : value;
+
   return (
     <div className="glass-card p-4 sm:p-5">
       <div
@@ -31,7 +37,11 @@ export function StatCard({
       </div>
       <div className="text-text-muted text-xs uppercase tracking-wide mt-3">{label}</div>
       <div className="text-text-primary text-2xl font-bold mt-1">
-        {isLoading ? <div className="h-8 w-24 bg-card-border rounded animate-pulse" /> : value}
+        {isLoading ? (
+          <div className="h-8 w-24 bg-card-border rounded animate-pulse" />
+        ) : (
+          displayValue
+        )}
       </div>
       <div
         className="text-sm mt-1 flex items-center gap-1"

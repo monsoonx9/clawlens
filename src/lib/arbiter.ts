@@ -583,8 +583,9 @@ export async function routeQuerySmart(
 
   try {
     // Build compact agent descriptions from AGENT_CONFIGS
-    const agentDescriptions = AGENT_CONFIGS
-      .filter((a) => a.id !== "THE_ARBITER" && enabledAgents.includes(a.id))
+    const agentDescriptions = AGENT_CONFIGS.filter(
+      (a) => a.id !== "THE_ARBITER" && enabledAgents.includes(a.id),
+    )
       .map((a) => `- ${a.id}: ${a.role} (skills: ${(a.relevantSkills || []).join(", ")})`)
       .join("\n");
 
@@ -631,13 +632,18 @@ Respond with ONLY valid JSON, no markdown:
     if (result.success && result.data) {
       const raw = result.data.trim();
       const jsonStr = raw.startsWith("```")
-        ? raw.replace(/```json?\n?/g, "").replace(/```/g, "").trim()
+        ? raw
+            .replace(/```json?\n?/g, "")
+            .replace(/```/g, "")
+            .trim()
         : raw;
       const parsed = JSON.parse(jsonStr);
       const agents = (parsed.agents || []) as AgentName[];
 
       // Validate agents exist and are enabled
-      const valid = agents.filter((a: AgentName) => enabledAgents.includes(a) && a !== "THE_ARBITER");
+      const valid = agents.filter(
+        (a: AgentName) => enabledAgents.includes(a) && a !== "THE_ARBITER",
+      );
 
       if (valid.length >= 3) {
         console.log(`[Council] LLM routed to: ${valid.join(", ")}`);
@@ -723,7 +729,7 @@ export async function fetchSkillData(
   context: SkillContext,
   preprocessedParams: Record<string, any> = {},
 ): Promise<string> {
-  const agentConfig = AGENT_CONFIGS.find(a => a.id === agentId);
+  const agentConfig = AGENT_CONFIGS.find((a) => a.id === agentId);
   if (!agentConfig || !agentConfig.relevantSkills || agentConfig.relevantSkills.length === 0) {
     return "";
   }
@@ -734,11 +740,14 @@ export async function fetchSkillData(
     return match ? match[0] : null;
   };
   const extractSymbol = (q: string): string | null => {
-    const match = q.match(/([A-Z]{2,8})(?:USDT)?/);
+    const match = q.match(/([A-Z]{2,8})(?:USDT)?/);
     return match ? match[1] : null;
   };
 
-  const symbol = preprocessedParams.symbol || extractSymbol(query) || (context.portfolio?.assets?.[0]?.symbol ?? "BTC");
+  const symbol =
+    preprocessedParams.symbol ||
+    extractSymbol(query) ||
+    (context.portfolio?.assets?.[0]?.symbol ?? "BTC");
   const address = preprocessedParams.address || extractAddress(query);
 
   const genericParams: Record<string, any> = {
@@ -1447,12 +1456,13 @@ Focus on: WHAT should the user DO?`;
     try {
       const parsed: Omit<ArbitersVerdict, "isStreaming" | "isComplete"> =
         JSON.parse(cleanedResponse);
-      
+
       // Inject meta-consensus data if available from the detector
       const consensusAgreement = consensusDataRaw?.consensus?.agreement;
       const consensusType = consensusDataRaw?.consensus?.type;
-      const hasConsensus = consensusType === "consensus" || (consensusAgreement && consensusAgreement >= 70);
-      
+      const hasConsensus =
+        consensusType === "consensus" || (consensusAgreement && consensusAgreement >= 70);
+
       verdict = {
         ...parsed,
         agreement: consensusAgreement ? consensusAgreement / 100 : undefined,

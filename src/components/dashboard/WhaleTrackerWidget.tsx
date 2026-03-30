@@ -2,6 +2,7 @@
 
 import { Eye, Plus, X, Wallet } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
+import { EmptyList } from "@/components/ui/EmptyState";
 
 interface Props {
   onAddClick: () => void;
@@ -21,22 +22,11 @@ export function WhaleTrackerWidget({ onAddClick }: Props) {
       </div>
 
       {whaleWallets.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-          <div className="w-12 h-12 bg-card border border-card-border text-text-muted rounded-full flex items-center justify-center mb-3">
-            <Eye className="w-5 h-5" />
-          </div>
-          <h3 className="text-text-primary font-semibold mb-1 text-sm">No wallets tracked</h3>
-          <p className="text-text-secondary text-xs max-w-[200px] mx-auto mb-4">
-            Monitor large transactions from smart money wallets.
-          </p>
-          <button
-            onClick={onAddClick}
-            className="glass text-text-primary text-sm font-semibold px-5 py-2 rounded-full flex items-center gap-2 hover:bg-card-hover transition-all touch-target"
-          >
-            <Plus className="w-4 h-4" />
-            Add Wallet
-          </button>
-        </div>
+        <EmptyList
+          icon={Eye}
+          title="No wallets tracked"
+          description="Monitor large transactions from smart money wallets."
+        />
       ) : (
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto space-y-0.5 pr-1">

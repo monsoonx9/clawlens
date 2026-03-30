@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, PieChart, Settings, Zap, Bot } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useHaptic } from "@/hooks/useHaptic";
 
 const navItems = [
   { name: "Home", href: "/dashboard", icon: LayoutDashboard },
@@ -17,6 +18,11 @@ const navItems = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { trigger } = useHaptic();
+
+  const handlePress = () => {
+    trigger("light");
+  };
 
   return (
     <div className="md:hidden fixed bottom-3 left-3 right-3 z-50 bg-[color-mix(in_srgb,var(--color-bg),transparent_10%)] backdrop-blur-xl border border-[color-mix(in_srgb,var(--color-card-border),transparent_50%)] rounded-2xl shadow-glow-lg pb-safe">
@@ -27,6 +33,7 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handlePress}
               className="flex flex-col items-center justify-center flex-1 h-full py-1 touch-manipulation"
             >
               <div

@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { PortfolioAsset } from "@/types";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { clsx } from "clsx";
 
 interface AllocationChartProps {
   assets: PortfolioAsset[];
@@ -17,6 +19,8 @@ const COLORS = [
 ];
 
 export function AllocationChart({ assets }: AllocationChartProps) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
   const data = assets.map((a) => ({
     name: a.symbol,
     value: a.allocation,
@@ -35,14 +39,36 @@ export function AllocationChart({ assets }: AllocationChartProps) {
               data={data}
               dataKey="value"
               innerRadius={55}
-              outerRadius={80}
+              outerRadius={activeIndex !== null ? 85 : 80}
               paddingAngle={3}
               stroke="none"
+              onMouseLeave={() => setActiveIndex(null)}
             >
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                  className="transition-all duration-200"
+                  style={{ opacity: activeIndex === null || activeIndex === index ? 1 : 0.5 }}
+                  onMouseEnter={() => setActiveIndex(index)}
+                />
               ))}
             </Pie>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const item = payload[0].payload;
+                return (
+                  <div className="bg-glass-strong backdrop-blur-md border border-card-border rounded-lg px-3 py-2 shadow-lg">
+                    <div className="text-text-primary font-semibold text-sm">{item.name}</div>
+                    <div className="text-text-secondary text-xs">
+                      ${item.valueUSD.toLocaleString(undefined, { minimumFractionDigits: 2 })} (
+                      {item.value.toFixed(2)}%)
+                    </div>
+                  </div>
+                );
+              }}
+            />
           </PieChart>
         </ResponsiveContainer>
         {/* Center label */}
@@ -55,7 +81,15 @@ export function AllocationChart({ assets }: AllocationChartProps) {
       {/* Legend */}
       <div className="flex flex-col gap-2 mt-4">
         {assets.map((asset, i) => (
-          <div key={asset.symbol} className="flex justify-between items-center">
+          <div
+            key={asset.symbol}
+            className={clsx(
+              "flex justify-between items-center p-1.5 rounded-lg transition-colors cursor-pointer",
+              activeIndex === i && "bg-card-hover",
+            )}
+            onMouseEnter={() => setActiveIndex(i)}
+            onMouseLeave={() => setActiveIndex(null)}
+          >
             <div className="flex gap-2 items-center">
               <div
                 className="w-2 h-2 rounded-full shrink-0 shadow-[0_0_4px]"
@@ -69,10 +103,7 @@ export function AllocationChart({ assets }: AllocationChartProps) {
             <div className="flex items-center">
               <span className="text-text-muted text-sm">{asset.allocation.toFixed(2)}%</span>
               <span className="text-text-secondary text-xs ml-3">
-                $
-                {asset.valueUSD.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
+                ${asset.valueUSD.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             </div>
           </div>

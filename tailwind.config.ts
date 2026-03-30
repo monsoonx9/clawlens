@@ -91,6 +91,7 @@ const config: Config = {
         shimmer: "shimmer 1.5s ease-in-out infinite",
         float: "float 6s ease-in-out infinite",
         "scale-in": "scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        ripple: "ripple 0.6s ease-out forwards",
       },
       keyframes: {
         fadeUp: {
@@ -120,6 +121,10 @@ const config: Config = {
         "scale-in": {
           "0%": { transform: "scale(0.9)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        ripple: {
+          "0%": { width: "0", height: "0", opacity: "0.5" },
+          "100%": { width: "200px", height: "200px", opacity: "0" },
         },
       },
       transitionTimingFunction: {

@@ -1,6 +1,9 @@
-import { ButtonHTMLAttributes, ReactNode } from "react";
+"use client";
+
+import { ButtonHTMLAttributes, ReactNode, useState } from "react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { AnimatePresence } from "framer-motion";
 
 type ButtonVariant = "primary" | "neon" | "secondary" | "outline" | "ghost" | "danger";
 type ButtonSize = "sm" | "md" | "lg";
@@ -12,6 +15,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   children: ReactNode;
+  enableRipple?: boolean;
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -35,13 +39,31 @@ export function Button({
   children,
   className,
   disabled,
+  enableRipple = true,
   ...props
 }: ButtonProps) {
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!enableRipple || disabled || isLoading) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now();
+    setRipples((prev) => [...prev, { id, x, y }]);
+
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 600);
+
+    props.onClick?.(e);
+  };
+
   return (
     <button
       className={twMerge(
         clsx(
-          "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 cursor-pointer whitespace-nowrap rounded-full hover:scale-105 active:scale-95",
+          "relative inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 cursor-pointer whitespace-nowrap rounded-full overflow-hidden hover:scale-105 active:scale-95",
           variantStyles[variant],
           size === "sm" && "h-9 px-4 text-xs font-bold leading-none",
           size === "md" && "h-11 px-6 text-sm font-bold leading-none",
@@ -51,8 +73,21 @@ export function Button({
         ),
       )}
       disabled={disabled || isLoading}
+      onClick={handleClick}
       {...props}
     >
+      <AnimatePresence>
+        {ripples.map((ripple) => (
+          <span
+            key={ripple.id}
+            className="absolute bg-white/30 pointer-events-none rounded-full animate-ripple"
+            style={{
+              left: ripple.x - 100,
+              top: ripple.y - 100,
+            }}
+          />
+        ))}
+      </AnimatePresence>
       {isLoading ? (
         <>
           <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

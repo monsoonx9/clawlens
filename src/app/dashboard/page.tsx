@@ -76,18 +76,42 @@ export default function DashboardPage() {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: prefersReduced ? { duration: 0 } : { staggerChildren: 0.08 },
+      transition: prefersReduced
+        ? { duration: 0 }
+        : {
+            staggerChildren: 0.06,
+            delayChildren: 0.1,
+          },
     },
   };
 
   const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: prefersReduced
+        ? { duration: 0 }
+        : {
+            type: "spring",
+            stiffness: 280,
+            damping: 22,
+            mass: 0.8,
+          },
+    },
+  };
+
+  const heroVariants: Variants = {
     hidden: { opacity: 0, y: 16 },
     show: {
       opacity: 1,
       y: 0,
       transition: prefersReduced
         ? { duration: 0 }
-        : { type: "spring", stiffness: 300, damping: 24 },
+        : {
+            duration: 0.5,
+            ease: [0.25, 0.4, 0.25, 1],
+          },
     },
   };
 
@@ -176,9 +200,18 @@ export default function DashboardPage() {
     >
       {/* ── ROW 1: Welcome Hero ────────────────────────────────── */}
       <motion.div
-        variants={itemVariants}
+        variants={heroVariants}
         className="relative overflow-hidden glass-card p-8 sm:p-10 mb-6"
       >
+        {/* Animated gradient background */}
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--color-accent) 0%, transparent 50%, var(--color-accent-secondary) 100%)",
+            animation: "pulse-glow 4s ease-in-out infinite",
+          }}
+        />
         {/* Decorative glow */}
         <div
           className="absolute top-0 right-0 w-[300px] h-[300px] pointer-events-none"
@@ -188,26 +221,47 @@ export default function DashboardPage() {
           }}
         />
         <div className="relative z-10">
-          <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest mb-3">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest mb-3"
+          >
             <LayoutDashboard className="w-4 h-4" />
             Command Center
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary tracking-tight mb-2">
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+            className="text-3xl sm:text-4xl font-extrabold text-text-primary tracking-tight mb-2"
+          >
             {getGreeting()}, Operator
-          </h1>
-          <p className="text-text-secondary text-base max-w-lg mb-6">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-text-secondary text-base max-w-lg mb-6"
+          >
             Your council of {enabledAgentCount} AI agents is standing by, powered by{" "}
             <span className="text-text-primary font-medium">{providerName}</span>. What would you
             like to investigate?
-          </p>
-          <Link
-            href="/council"
-            className="inline-flex items-center gap-2 bg-text-primary text-amoled font-bold px-6 py-3 rounded-full text-sm hover:scale-105 active:scale-95 hover:bg-text-secondary hover:shadow-glow transition-all group"
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
           >
-            <Zap className="w-4 h-4" />
-            Start New Council
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+            <Link
+              href="/council"
+              className="inline-flex items-center gap-2 bg-text-primary text-amoled font-bold px-6 py-3 rounded-full text-sm hover:scale-105 active:scale-95 hover:bg-text-secondary hover:shadow-glow transition-all group"
+            >
+              <Zap className="w-4 h-4" />
+              Start New Council
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </motion.div>
         </div>
       </motion.div>
 

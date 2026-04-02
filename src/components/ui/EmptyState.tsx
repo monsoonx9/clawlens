@@ -6,7 +6,7 @@ import { twMerge } from "tailwind-merge";
 import { motion } from "framer-motion";
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   title: string;
   description?: string;
   action?: {
@@ -19,6 +19,48 @@ interface EmptyStateProps {
   };
   className?: string;
   variant?: "default" | "compact";
+  illustration?:
+    | "wallet"
+    | "chart"
+    | "search"
+    | "robot"
+    | "shield"
+    | "users"
+    | "clock"
+    | "document";
+}
+
+const illustrationIcons: Record<string, string> = {
+  wallet: "M21 12V7H5a2 2 0 010-4h14v4",
+  chart: "M3 3v18h18",
+  search: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
+  robot:
+    "M12 2a2 2 0 00-2 2v4a2 2 0 01-2 2v6a2 2 0 002 2h4a2 2 0 002-2V8a2 2 0 01-2-2V4a2 2 0 00-2-2z",
+  shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  users:
+    "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87",
+  clock:
+    "M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83",
+  document: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z",
+};
+
+function Illustration({ type }: { type: string }) {
+  return (
+    <div className="relative w-20 h-20 mb-4">
+      <svg
+        viewBox="0 0 48 48"
+        className="w-full h-full text-text-muted"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d={illustrationIcons[type] || illustrationIcons.search} />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-card-border/30 to-transparent rounded-full" />
+    </div>
+  );
 }
 
 export function EmptyState({
@@ -29,6 +71,7 @@ export function EmptyState({
   secondaryAction,
   className,
   variant = "default",
+  illustration,
 }: EmptyStateProps) {
   if (variant === "compact") {
     return (
@@ -37,9 +80,13 @@ export function EmptyState({
           clsx("flex flex-col items-center justify-center text-center p-4", className),
         )}
       >
-        <div className="w-10 h-10 bg-card border border-card-border text-text-muted rounded-full flex items-center justify-center mb-3">
-          <Icon className="w-4 h-4" />
-        </div>
+        {illustration ? (
+          <Illustration type={illustration} />
+        ) : Icon ? (
+          <div className="w-10 h-10 bg-card border border-card-border text-text-muted rounded-full flex items-center justify-center mb-3">
+            <Icon className="w-4 h-4" />
+          </div>
+        ) : null}
         <h3 className="text-text-primary font-semibold text-sm mb-1">{title}</h3>
         {description && (
           <p className="text-text-secondary text-xs max-w-[180px] mx-auto">{description}</p>
@@ -57,9 +104,13 @@ export function EmptyState({
         clsx("flex flex-col items-center justify-center text-center p-6", className),
       )}
     >
-      <div className="w-14 h-14 bg-card border border-card-border text-text-muted rounded-full flex items-center justify-center mb-4">
-        <Icon className="w-6 h-6" />
-      </div>
+      {illustration ? (
+        <Illustration type={illustration} />
+      ) : Icon ? (
+        <div className="w-14 h-14 bg-card border border-card-border text-text-muted rounded-full flex items-center justify-center mb-4">
+          <Icon className="w-6 h-6" />
+        </div>
+      ) : null}
       <h3 className="text-text-primary font-semibold text-base mb-2">{title}</h3>
       {description && (
         <p className="text-text-secondary text-sm max-w-[240px] mx-auto mb-5 leading-relaxed">

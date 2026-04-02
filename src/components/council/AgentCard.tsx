@@ -6,6 +6,18 @@ import { twMerge } from "tailwind-merge";
 import { motion } from "framer-motion";
 import { HoverBorderGradient } from "@/components/ui/HoverBorderGradient";
 import { useReducedMotion, getTransition } from "@/hooks/useReducedMotion";
+import {
+  Search,
+  Shield,
+  Eye,
+  Ghost,
+  BookOpen,
+  Activity,
+  GraduationCap,
+  Feather,
+  Flame,
+  Scale,
+} from "lucide-react";
 
 interface AgentCardProps {
   agentId: AgentName;
@@ -18,10 +30,24 @@ interface AgentCardProps {
   isLoading?: boolean;
 }
 
+const agentIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  SCOUT: Search,
+  THE_WARDEN: Shield,
+  LENS: Eye,
+  SHADOW: Ghost,
+  LEDGER: BookOpen,
+  PULSE: Activity,
+  SAGE: GraduationCap,
+  QUILL: Feather,
+  FUTURES: Flame,
+  BLAZE: Flame,
+  THE_ARBITER: Scale,
+};
+
 // hexToRgb removed in favor of color-mix
 
 export function AgentCard({
-  agentId: _agentId,
+  agentId,
   displayName,
   role,
   color,
@@ -31,7 +57,7 @@ export function AgentCard({
   isLoading = false,
 }: AgentCardProps) {
   const prefersReduced = useReducedMotion();
-  const initial = displayName.charAt(0).toUpperCase();
+  const AgentIcon = agentIcons[agentId] || Scale;
 
   const isThinking = status === "thinking";
   const isSpeaking = status === "speaking";
@@ -106,15 +132,18 @@ export function AgentCard({
         {/* Top row */}
         <div className="flex justify-between items-center relative z-10">
           <div className="flex gap-3 items-center">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm"
+            <motion.div
+              className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{
                 backgroundColor: `color-mix(in srgb, ${color}, transparent 70%)`,
-                color: color,
               }}
+              animate={isActive && !prefersReduced ? { scale: [1, 1.05, 1] } : {}}
+              transition={isActive && !prefersReduced ? { duration: 2, repeat: Infinity } : {}}
             >
-              {initial}
-            </div>
+              <span style={{ color }}>
+                <AgentIcon className="w-4 h-4" />
+              </span>
+            </motion.div>
             <div>
               <div className="text-text-primary text-sm font-semibold">{displayName}</div>
               <div className="text-text-muted text-xs">{role}</div>

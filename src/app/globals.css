@@ -361,6 +361,68 @@ body {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
 @keyframes breathe-neon {
   0%,
   100% {
@@ -427,6 +489,38 @@ body {
   .touch-target {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Animations */
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-card-border) 0%,
+      var(--color-card-border-hover) 50%,
+      var(--color-card-border) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out forwards;
+  }
+
+  .animate-ripple {
+    animation: ripple 0.6s ease-out forwards;
   }
 
   /* Standard spacing utilities */
@@ -521,6 +615,21 @@ body {
     backdrop-filter: blur(12px) saturate(150%);
     -webkit-backdrop-filter: blur(12px) saturate(150%);
     border: 1px solid var(--color-card-border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    pointer-events: none;
   }
 
   .glass-strong {
@@ -528,6 +637,21 @@ body {
     backdrop-filter: blur(16px) saturate(160%);
     -webkit-backdrop-filter: blur(16px) saturate(160%);
     border: 1px solid var(--color-card-border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-strong::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+    pointer-events: none;
   }
 
   .glass-card {
@@ -542,6 +666,21 @@ body {
       box-shadow 0.4s ease;
     position: relative;
     z-index: 1;
+    overflow: hidden;
+  }
+
+  .glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
   }
 
   .glass-card:hover {
@@ -554,6 +693,17 @@ body {
       inset 0 1px 0 color-mix(in srgb, white, transparent 40%);
   }
 
+  .glass-card:hover::before {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+    transition: background 0.4s ease;
+  }
+
   .dark .glass-card:hover {
     border-color: color-mix(in srgb, var(--color-accent), transparent 70%);
     box-shadow:
@@ -561,6 +711,16 @@ body {
       0 0 40px color-mix(in srgb, var(--color-accent), transparent 82%),
       0 0 100px color-mix(in srgb, var(--color-accent), transparent 92%),
       inset 0 1px 0 color-mix(in srgb, var(--color-text-primary), transparent 88%);
+  }
+
+  .dark .glass-card:hover::before {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
   }
 
   .glass-pill {

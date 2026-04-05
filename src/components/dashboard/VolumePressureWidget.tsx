@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BarChart3, Loader2, AlertCircle, RefreshCw, Activity } from "lucide-react";
 import { getSkill } from "@/skills";
 import { clsx } from "clsx";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface VolumeData {
   symbol: string;
@@ -107,6 +108,7 @@ export function VolumePressureWidget() {
         <button
           onClick={() => fetchData(false)}
           className="p-2 glass rounded-full text-text-secondary hover:text-text-primary transition-all"
+          title="Refresh data"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -139,10 +141,12 @@ export function VolumePressureWidget() {
           <p className="text-text-secondary text-sm">{error}</p>
         </div>
       ) : !currentData ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-          <BarChart3 className="w-8 h-8 text-text-muted" />
-          <p className="text-text-secondary text-sm">No data available</p>
-        </div>
+        <EmptyState
+          icon={BarChart3}
+          title="No volume data"
+          description="Volume data will appear here"
+          variant="compact"
+        />
       ) : (
         <div className="flex-1 flex flex-col justify-center">
           <div className="flex items-center justify-center gap-8 mb-6">

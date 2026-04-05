@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { TrendingUp, Loader2, ExternalLink, ChevronDown } from "lucide-react";
 import { getSkill } from "@/skills";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface TrendingToken {
   symbol: string;
@@ -162,9 +163,12 @@ export function TrendingTokensWidget() {
           <p className="text-text-muted text-xs">{error}</p>
         </div>
       ) : tokens.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center py-8">
-          <p className="text-text-muted text-xs">No data available</p>
-        </div>
+        <EmptyState
+          icon={TrendingUp}
+          title="No tokens found"
+          description="Check back later for trending tokens"
+          variant="compact"
+        />
       ) : (
         <>
           <div className="space-y-2 overflow-y-auto flex-1 min-h-0">

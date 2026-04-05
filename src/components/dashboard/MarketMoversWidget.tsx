@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Loader2, AlertCircle, RefreshCw, BarChart3 } from "lucide-react";
 import { getSkill } from "@/skills";
 import { clsx } from "clsx";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface MarketMover {
   symbol: string;
@@ -113,6 +114,7 @@ export function MarketMoversWidget() {
         <button
           onClick={() => fetchData(false)}
           className="p-2 glass rounded-full text-text-secondary hover:text-text-primary transition-all"
+          title="Refresh data"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -155,10 +157,12 @@ export function MarketMoversWidget() {
           <p className="text-text-secondary text-sm">{error}</p>
         </div>
       ) : displayData.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-          <BarChart3 className="w-8 h-8 text-text-muted" />
-          <p className="text-text-secondary text-sm">No data available</p>
-        </div>
+        <EmptyState
+          icon={BarChart3}
+          title="No market movers"
+          description="Market data will appear here"
+          variant="compact"
+        />
       ) : (
         <div className="flex-1 overflow-auto space-y-2">
           {displayData.slice(0, 6).map((item, idx) => (

@@ -114,6 +114,7 @@ export function ProfileDropdown() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-bg lg:bg-[color-mix(in_srgb,var(--color-bg),transparent_5%)] backdrop-blur-md flex items-center justify-center shrink-0 cursor-pointer overflow-hidden ring-2 ring-card-border hover:ring-card-border-hover transition-all touch-target"
+          title="Profile menu"
         >
           <User className="w-5 h-5 text-text-secondary" />
         </button>

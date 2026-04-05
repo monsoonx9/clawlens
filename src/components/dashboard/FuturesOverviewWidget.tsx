@@ -96,6 +96,7 @@ export function FuturesOverviewWidget() {
         <button
           onClick={() => fetchData(false)}
           className="p-2 glass rounded-full text-text-secondary hover:text-text-primary transition-all"
+          title="Refresh data"
         >
           <RefreshCw className="w-4 h-4" />
         </button>

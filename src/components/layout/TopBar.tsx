@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { TrendingUp, TrendingDown, Box } from "lucide-react";
+import { TrendingUp, TrendingDown, Box, Search, Command } from "lucide-react";
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ProfileDropdown } from "@/components/ui/ProfileDropdown";
@@ -18,6 +19,16 @@ const routeTitleMap: Record<string, string> = {
 
 export function TopBar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const openCommandPalette = useCallback(() => {
+    const event = new KeyboardEvent("keydown", {
+      key: "k",
+      metaKey: true,
+      ctrlKey: true,
+    });
+    document.dispatchEvent(event);
+  }, []);
 
   const title = useMemo(() => {
     return routeTitleMap[pathname] || "ClawLens";
@@ -113,6 +124,19 @@ export function TopBar() {
             {bscBlock !== null ? `#${bscBlock.toLocaleString()}` : "—"}
           </span>
         </div>
+
+        {/* Command Palette Trigger */}
+        <button
+          onClick={openCommandPalette}
+          className="hidden sm:flex items-center gap-2 bg-[color-mix(in_srgb,var(--color-card),transparent_40%)] backdrop-blur-md rounded-full px-3 py-1.5 border border-card-border hover:border-card-border-hover transition-colors group"
+          title="Search & commands (⌘K)"
+        >
+          <Search className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" />
+          <span className="text-text-muted text-xs font-medium">Search</span>
+          <kbd className="hidden lg:inline-flex items-center gap-0.5 bg-card border border-card-border rounded px-1.5 py-0.5 text-[10px] font-mono text-text-muted">
+            <Command className="w-2.5 h-2.5" />K
+          </kbd>
+        </button>
 
         <ThemeToggle />
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import { AGENTS } from "@/lib/constants";
 import { getSkill } from "@/skills";
@@ -35,6 +36,7 @@ import {
   BarChart3,
   LayoutDashboard,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -65,6 +67,7 @@ const RISK_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { apiKeys, portfolio, preferences, sessions, setPortfolio } = useAppStore();
   const prefersReduced = useReducedMotion();
   const [watchlistOpen, setWatchlistOpen] = useState(false);
@@ -349,15 +352,16 @@ export default function DashboardPage() {
           </div>
 
           {recentSessions.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-              <div className="w-14 h-14 bg-card border border-card-border text-text-muted rounded-full flex items-center justify-center mb-4">
-                <MessageSquare className="w-6 h-6" />
-              </div>
-              <h3 className="text-text-primary font-semibold mb-1">No sessions yet</h3>
-              <p className="text-text-secondary text-sm max-w-[220px] mx-auto">
-                Ask the Council your first question to see results here.
-              </p>
-            </div>
+            <EmptyState
+              icon={MessageSquare}
+              title="No sessions yet"
+              description="Ask the Council your first question to see results here."
+              action={{
+                label: "Start New Council",
+                onClick: () => router.push("/council"),
+              }}
+              variant="default"
+            />
           ) : (
             <div className="space-y-3">
               {recentSessions.map((session) => {

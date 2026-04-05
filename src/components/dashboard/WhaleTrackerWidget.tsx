@@ -66,6 +66,7 @@ export function WhaleTrackerWidget({ onAddClick }: Props) {
           <button
             onClick={onAddClick}
             className="mt-2 shrink-0 w-full border border-dashed border-card-border text-text-secondary text-sm font-medium py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-card-hover hover:border-card-border-hover transition-all touch-target"
+            title="Add whale wallet to track"
           >
             <Plus className="w-4 h-4" />
             Add Wallet
